@@ -12,63 +12,6 @@ export default function Tasarim() {
   // örnek olarak view switch:
   const [view, setView] = useState("giris");
 
- return (
-  <div style={{ display: "flex", minHeight: "100vh", background: "#eef2ff" }}>
-    <Sidebar
-      user={user}
-      view={view}
-      setView={setView}
-      sidebarOpen={sidebarOpen}
-      setSidebarOpen={setSidebarOpen}
-    />
-    <div style={{
-      flex: 1, marginLeft: window.innerWidth > 800 ? 220 : 0,
-      minHeight: "100vh", background: "#f8fafc", boxShadow: "-2px 0 18px #0001",
-      transition: "margin-left 0.2s", position: "relative"
-    }}>
-      {/* Sağ üst profil kutusu */}
-      <div style={{
-        position: "absolute", right: 20, top: 18, zIndex: 11,
-        display: "flex", alignItems: "center", gap: 8
-      }}>
-        {user && (
-          <>
-            <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.ad} alt=""
-              style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #a78bfa" }} />
-            <span style={{ fontWeight: 700 }}>{user.ad}</span>
-            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
-              style={{
-                background: "#fff", color: "#a78bfa", border: "none", borderRadius: 8,
-                fontWeight: 700, fontSize: 14, padding: "8px 13px", cursor: "pointer"
-              }}>Çıkış</button>
-          </>
-        )}
-      </div>
-      {/* Duyuru/banner alanı */}
-      <div style={{
-        width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
-        color: "#7c3aed", fontWeight: 700, fontSize: 15, textAlign: "center", letterSpacing: 1.2
-      }}>
-        🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
-      </div>
-      {/* Ana view ekranları */}
-      <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
-        {view === "giris" && /* Giriş ekranı kodun */}
-        {view === "quiz" && /* Quiz kodun */}
-        {view === "profil" && /* Profil ekranın */}
-        {view === "soruEkle" && /* Soru ekle ekranı */}
-        {view === "istatistik" && /* İstatistikler ekranı */}
-        {view === "yardim" && /* Yardım ekranı */}
-        {view === "adminGiris" && /* Admin giriş ekranı */}
-        {view === "admin" && /* Admin paneli */}
-        {/* ...diğer view'ler */}
-      </div>
-    </div>
-  </div>
-);
-}
-
-
 const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
 const mainColor = "#7c3aed";
 const errorColor = "#ef4444";
@@ -93,15 +36,65 @@ const SORU_SAYILARI = [5, 10, 20, 50];
 
 const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae";
 const KAYIT_API = "https://api.sheetbest.com/sheets/f97d1aac-7203-4748-a4d4-c5b452b61a94";
+export default function Tasarim() {
+  // PROFİL
+  const [ad, setAd] = useState("");
+  const [tel, setTel] = useState("");
+  const [avatar, setAvatar] = useState(null);
+  const [ders, setDers] = useState(DERSLER[0].ad);
+  const [konu, setKonu] = useState("");
+  const [user, setUser] = useState(getUser());
+  const [soruSayisi, setSoruSayisi] = useState(null);
+  const [zamanSiniri, setZamanSiniri] = useState(false); // isteğe bağlı
+  // SORU YÜKLEME/FİLTRE
+  const [questions, setQuestions] = useState([]);
+  const [originalQuestions, setOriginalQuestions] = useState([]);
+  // QUIZ STATE
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [bitti, setBitti] = useState(false);
+  const [istatistik, setIstatistik] = useState({ dogru: 0, yanlis: 0, bonus: 0 });
+  const [passed, setPassed] = useState([]); // pas geçenler
+  // SÜRE
+  const [sure, setSure] = useState(0);
+  const [sureAktif, setSureAktif] = useState(false);
+  const sureRef = useRef();
+  // HIZLI BONUS
+  const [bonusTimer, setBonusTimer] = useState(null);
 
-function shuffle(array) {
+  // MODLAR
+  const [view, setView] = useState("giris"); // giriş, soruSayisi, quiz, bitis, admin, arkadas, profil, soruEkle, kodlu, tekrar, sonuc
+
+  // SORU EKLEME MODAL
+  const [yeniSoru, setYeniSoru] = useState({ Soru: "", A: "", B: "", C: "", D: "", DogruCevap: "", Aciklama: "", Ders: "", Konu: "" });
+  const [showSoruModal, setShowSoruModal] = useState(false);
+
+  // Admin panel açılımı (local şifre ile - güvenli olmayan basic mod)
+  const [admin, setAdmin] = useState(false);
+  // Karma quiz için: dersler toplu mu seçildi?
+  const [karma, setKarma] = useState(false);
+  //ADMİN GİRİŞ YARRRAMMMMMM
+  const ADMIN_KULLANICI = "PEZEBERK"; // DEĞİŞEBİLİR
+  const ADMIN_SIFRE = "3535"; // DEĞİŞEBİLİR 
+  // Basit yanlış analiz: Sık yanlış yapılan soruları belirle (demo)
+  const soruSay = {};
+  kayitlar.forEach(k => {
+    const key = (k.ders || "") + ":" + (k.soru_id || "");
+    if (!soruSay[key]) soruSay[key] = 0;
+    soruSay[key] += Number(k.yanlis || 0);
+  });
+  const enYanlis = Object.entries(soruSay)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return arr;
-}
+  return arr;}
 
 function saveUser(u) {
   window.localStorage.setItem("hukuk-calisma-user", JSON.stringify(u));
@@ -164,45 +157,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
   );
 }
 
-export default function Tasarim() {
-  // PROFİL
-  const [ad, setAd] = useState("");
-  const [tel, setTel] = useState("");
-  const [avatar, setAvatar] = useState(null);
-  const [ders, setDers] = useState(DERSLER[0].ad);
-  const [konu, setKonu] = useState("");
-  const [user, setUser] = useState(getUser());
-  const [soruSayisi, setSoruSayisi] = useState(null);
-  const [zamanSiniri, setZamanSiniri] = useState(false); // isteğe bağlı
-  // SORU YÜKLEME/FİLTRE
-  const [questions, setQuestions] = useState([]);
-  const [originalQuestions, setOriginalQuestions] = useState([]);
-  // QUIZ STATE
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [checked, setChecked] = useState(false);
-  const [bitti, setBitti] = useState(false);
-  const [istatistik, setIstatistik] = useState({ dogru: 0, yanlis: 0, bonus: 0 });
-  const [passed, setPassed] = useState([]); // pas geçenler
-  // SÜRE
-  const [sure, setSure] = useState(0);
-  const [sureAktif, setSureAktif] = useState(false);
-  const sureRef = useRef();
-  // HIZLI BONUS
-  const [bonusTimer, setBonusTimer] = useState(null);
-
-  // MODLAR
-  const [view, setView] = useState("giris"); // giriş, soruSayisi, quiz, bitis, admin, arkadas, profil, soruEkle, kodlu, tekrar, sonuc
-
-  // SORU EKLEME MODAL
-  const [yeniSoru, setYeniSoru] = useState({ Soru: "", A: "", B: "", C: "", D: "", DogruCevap: "", Aciklama: "", Ders: "", Konu: "" });
-  const [showSoruModal, setShowSoruModal] = useState(false);
-
-  // Admin panel açılımı (local şifre ile - güvenli olmayan basic mod)
-  const [admin, setAdmin] = useState(false);
-  // Karma quiz için: dersler toplu mu seçildi?
-  const [karma, setKarma] = useState(false);
-
   // KISAYOL TUŞLARI
   useEffect(() => {
     function handleKey(e) {
@@ -222,7 +176,7 @@ export default function Tasarim() {
     // eslint-disable-next-line
   }, [view, checked, selected, current, questions, bitti]);
 
-  // SORU ÇEKME
+ // SORU ÇEKME
   useEffect(() => {
     if (view === "quiz" && user && soruSayisi) {
       fetch(SHEET_API)
@@ -897,8 +851,6 @@ export default function Tasarim() {
     : chunk
 )}
 <a href="https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6098.pdf" target="_blank">TBK m. 27</a>
-const ADMIN_KULLANICI = "berke147"; // DEĞİŞTİREBİLİRSİN!
-const ADMIN_SIFRE = "hukukgpt2024"; // DEĞİŞTİREBİLİRSİN!
 <button
   type="button"
   onClick={() => setView("adminGiris")}
@@ -1000,17 +952,6 @@ if (admin && view === "admin") {
       });
   }, []);
 
-  // Basit yanlış analiz: Sık yanlış yapılan soruları belirle (demo)
-  const soruSay = {};
-  kayitlar.forEach(k => {
-    const key = (k.ders || "") + ":" + (k.soru_id || "");
-    if (!soruSay[key]) soruSay[key] = 0;
-    soruSay[key] += Number(k.yanlis || 0);
-  });
-  const enYanlis = Object.entries(soruSay)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
   return (
     <div style={{
       minHeight: "100vh", background: bgGradient, color: "#fff", fontFamily: "Inter, sans-serif", padding: 30
@@ -1073,6 +1014,62 @@ if (admin && view === "admin") {
       </button>
     </div>
   );
+}
+//Sidebar
+return (
+  <div style={{ display: "flex", minHeight: "100vh", background: "#eef2ff" }}>
+    <Sidebar
+      user={user}
+      view={view}
+      setView={setView}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+    />
+    <div style={{
+      flex: 1, marginLeft: window.innerWidth > 800 ? 220 : 0,
+      minHeight: "100vh", background: "#f8fafc", boxShadow: "-2px 0 18px #0001",
+      transition: "margin-left 0.2s", position: "relative"
+    }}>
+      {/* Sağ üst profil kutusu */}
+      <div style={{
+        position: "absolute", right: 20, top: 18, zIndex: 11,
+        display: "flex", alignItems: "center", gap: 8
+      }}>
+        {user && (
+          <>
+            <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.ad} alt=""
+              style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #a78bfa" }} />
+            <span style={{ fontWeight: 700 }}>{user.ad}</span>
+            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
+              style={{
+                background: "#fff", color: "#a78bfa", border: "none", borderRadius: 8,
+                fontWeight: 700, fontSize: 14, padding: "8px 13px", cursor: "pointer"
+              }}>Çıkış</button>
+          </>
+        )}
+      </div>
+      {/* Duyuru/banner alanı */}
+      <div style={{
+        width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
+        color: "#7c3aed", fontWeight: 700, fontSize: 15, textAlign: "center", letterSpacing: 1.2
+      }}>
+        🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
+      </div>
+      {/* Ana view ekranları */}
+      <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
+        {view === "giris" && /* Giriş ekranı kodun */}
+        {view === "quiz" && /* Quiz kodun */}
+        {view === "profil" && /* Profil ekranın */}
+        {view === "soruEkle" && /* Soru ekle ekranı */}
+        {view === "istatistik" && /* İstatistikler ekranı */}
+        {view === "yardim" && /* Yardım ekranı */}
+        {view === "adminGiris" && /* Admin giriş ekranı */}
+        {view === "admin" && /* Admin paneli */}
+        {/* ...diğer view'ler */}
+      </div>
+    </div>
+  </div>
+);
 }
 
 
