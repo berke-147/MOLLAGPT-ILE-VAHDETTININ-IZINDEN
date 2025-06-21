@@ -13,9 +13,10 @@ const DERSLER = [
   "Roma Hukuku", "Aile Hukuku", "Medeni Hukuk"
 ];
 
-// --- SENİN GÜNCEL SHEETBEST API LINKLERİN ---
-const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae"; // Soru havuzu
-const KAYIT_API = "https://api.sheetbest.com/sheets/f97d1aac-7203-4748-a4d4-c5b452b61a94";  // Kayıtlar
+const SORU_SAYILARI = [5, 10, 20, 50];
+
+const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae";
+const KAYIT_API = "https://api.sheetbest.com/sheets/f97d1aac-7203-4748-a4d4-c5b452b61a94";
 
 function shuffle(array) {
   const arr = [...array];
@@ -50,12 +51,34 @@ function isTelefonValid(num) {
   return /^5\d{2} \d{3} \d{2} \d{2}$/.test(num.trim());
 }
 
+function StatsBar({ dogru, yanlis, toplam }) {
+  return (
+    <div style={{
+      display: "flex", justifyContent: "center", gap: 18, margin: "14px 0 2px 0"
+    }}>
+      <div style={{
+        color: correctColor, fontWeight: 700, fontSize: 14, letterSpacing: 0.7,
+        background: "#22c55e22", borderRadius: 7, padding: "2px 13px"
+      }}>✔ Doğru: {dogru}</div>
+      <div style={{
+        color: errorColor, fontWeight: 700, fontSize: 14, letterSpacing: 0.7,
+        background: "#ef444422", borderRadius: 7, padding: "2px 13px"
+      }}>✖ Yanlış: {yanlis}</div>
+      <div style={{
+        color: "#fff", fontWeight: 600, fontSize: 14,
+        background: "#7c3aed33", borderRadius: 7, padding: "2px 13px"
+      }}>Toplam: {toplam}</div>
+    </div>
+  );
+}
+
 export default function Tasarim() {
   // Giriş state
   const [ad, setAd] = useState("");
   const [tel, setTel] = useState("");
   const [ders, setDers] = useState(DERSLER[0]);
   const [user, setUser] = useState(getUser());
+  const [soruSayisi, setSoruSayisi] = useState(null); // eklendi!
   // Quiz state
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -64,19 +87,18 @@ export default function Tasarim() {
   const [bitti, setBitti] = useState(false);
   const [istatistik, setIstatistik] = useState({ dogru: 0, yanlis: 0 });
 
-  // Soruları çek (ve derse göre filtrele)
+  // Soru havuzunu çek, kullanıcı giriş yaptıysa ve soru sayısı seçildiyse
   useEffect(() => {
-    if (!user) return;
+    if (!user || !soruSayisi) return;
     fetch(SHEET_API)
       .then(res => res.json())
       .then(data => {
-        // HATALI/FAZLA BOŞLUK vb. varsa toleranslı eşleştirme:
         const filtered = data.filter(s =>
           (s.Ders || "").trim().toLowerCase() === user.ders.trim().toLowerCase()
         );
-        setQuestions(shuffle(filtered));
+        setQuestions(shuffle(filtered).slice(0, soruSayisi));
       });
-  }, [user]);
+  }, [user, soruSayisi]);
 
   // Kayıt işlemi (quiz bitince)
   useEffect(() => {
@@ -90,7 +112,9 @@ export default function Tasarim() {
           tarih: new Date().toLocaleString("tr-TR"),
           ders: user.ders,
           dogru: istatistik.dogru,
-          yanlis: istatistik.yanlis
+          yanlis: istatistik.yanlis,
+          toplamSoru: questions.length,
+          cevaplanan: current + (checked ? 1 : 0)
         })
       });
     }
@@ -134,7 +158,7 @@ export default function Tasarim() {
             onChange={e => setTel(formatTelefon(e.target.value))}
             style={{
               padding: "10px 16px", borderRadius: 8,
-              border: telValid || tel === "" ? "none" : "2px solid #ef4444",
+              border: isTelefonValid(tel) || tel === "" ? "none" : "2px solid #ef4444",
               width: "90%", marginBottom: 10, fontSize: 17, outline: "none", letterSpacing: 2
             }}
             type="tel"
@@ -143,7 +167,7 @@ export default function Tasarim() {
             required
           /><br />
           <div style={{ color: "#ef4444", height: 18, fontSize: 13, marginBottom: 6 }}>
-            {!telValid && tel.length > 0 && "Lütfen telefonunuzu 5XX XXX XX XX şeklinde girin"}
+            {!isTelefonValid(tel) && tel.length > 0 && "Lütfen telefonunuzu 5XX XXX XX XX şeklinde girin"}
           </div>
           <select value={ders} onChange={e => setDers(e.target.value)} style={{
             padding: "10px 14px", borderRadius: 8, width: "95%", fontSize: 16,
@@ -157,12 +181,48 @@ export default function Tasarim() {
             style={{
               background: mainColor, color: "#fff", border: "none", borderRadius: 8,
               padding: "10px 22px", fontWeight: 700, fontSize: 17,
-              cursor: adValid && telValid ? "pointer" : "not-allowed",
+              cursor: adValid && isTelefonValid(tel) ? "pointer" : "not-allowed",
               boxShadow: "0 2px 8px #7c3aed22"
             }}
-            disabled={!(adValid && telValid)}
-          >Başla</button>
+            disabled={!(adValid && isTelefonValid(tel))}
+          >Devam Et</button>
         </form>
+      </div>
+    );
+  }
+
+  // Eğer kullanıcı giriş yaptıysa ve soru sayısı seçilmediyse
+  if (user && !soruSayisi) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        background: bgGradient, fontFamily: "Inter, sans-serif"
+      }}>
+        <div style={{
+          background: "#fff2", borderRadius: 18, boxShadow: cardShadow,
+          padding: 36, minWidth: 330, textAlign: "center"
+        }}>
+          <h2 style={{ color: "#fff", fontWeight: 700, fontSize: 21, marginBottom: 22 }}>
+            Kaç Soru Çözeceksiniz?
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
+            {SORU_SAYILARI.map(n => (
+              <button
+                key={n}
+                onClick={() => setSoruSayisi(n)}
+                style={{
+                  width: 180, fontSize: 19, fontWeight: 700, color: "#fff", background: mainColor,
+                  border: "none", borderRadius: 10, padding: "12px 0", marginBottom: 0, boxShadow: "0 1px 8px #7c3aed33", cursor: "pointer"
+                }}>
+                {n} Soru
+              </button>
+            ))}
+          </div>
+          <button onClick={() => { setUser(null); saveUser(null); }} style={{
+            marginTop: 22, background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
+            padding: "8px 20px", fontWeight: 600, fontSize: 15, cursor: "pointer"
+          }}>Geri Dön</button>
+        </div>
       </div>
     );
   }
@@ -183,14 +243,17 @@ export default function Tasarim() {
         <div style={{ fontWeight: 600, fontSize: 19, margin: "18px 0" }}>
           <span style={{ color: correctColor }}>Doğru: {istatistik.dogru}</span> / <span style={{ color: errorColor }}>Yanlış: {istatistik.yanlis}</span>
         </div>
+        <div style={{ fontWeight: 600, fontSize: 16, margin: "0 0 16px 0" }}>
+          <span style={{ color: "#fff" }}>Cevaplanan Soru: {current + (checked ? 1 : 0)} / {questions.length}</span>
+        </div>
         <button onClick={() => {
           setCurrent(0); setBitti(false); setSelected(null); setChecked(false);
-          setQuestions(shuffle(questions)); setIstatistik({ dogru: 0, yanlis: 0 });
+          setQuestions(shuffle(questions).slice(0, soruSayisi)); setIstatistik({ dogru: 0, yanlis: 0 });
         }} style={{
           background: mainColor, color: "#fff", border: "none", borderRadius: 8,
           padding: "10px 22px", fontWeight: 700, fontSize: 18, marginTop: 8, cursor: "pointer"
         }}>Tekrar Dene</button>
-        <button onClick={() => { setUser(null); saveUser(null); }} style={{
+        <button onClick={() => { setUser(null); setSoruSayisi(null); saveUser(null); }} style={{
           background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
           padding: "8px 20px", fontWeight: 600, fontSize: 15, marginTop: 16, cursor: "pointer"
         }}>Çıkış Yap</button>
@@ -221,6 +284,7 @@ export default function Tasarim() {
             <span role="img" aria-label="user">👤</span> {user.ad}
           </div>
         </div>
+        <StatsBar dogru={istatistik.dogru} yanlis={istatistik.yanlis} toplam={questions.length} />
         {/* Progress Bar */}
         <div style={{
           width: "100%", height: 8, background: "#393a50", borderRadius: 8, overflow: "hidden", marginBottom: 16
@@ -286,79 +350,77 @@ export default function Tasarim() {
               </button>
             ))}
           </div>
-          {!checked ? (
-            <button
-              onClick={() => {
-                setChecked(true);
-                setIstatistik(ist =>
-                  selected === Number(q.DogruCevap)
-                    ? { ...ist, dogru: ist.dogru + 1 }
-                    : { ...ist, yanlis: ist.yanlis + 1 }
-                );
-                if (current === questions.length - 1) setBitti(true);
-              }}
-              disabled={selected === null}
-              style={{
-                marginTop: 22, width: "100%", padding: 14, background: mainColor, color: "#fff",
-                border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
-                boxShadow: "0 4px 15px #7c3aed18", cursor: selected === null ? "not-allowed" : "pointer"
-              }}
-            >
-              Kontrol Et
-            </button>
-          ) : (
-            <>
-              <div
+          <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+            {!checked && (
+              <button
+                onClick={() => {
+                  setChecked(true);
+                  setIstatistik(ist =>
+                    selected === Number(q.DogruCevap)
+                      ? { ...ist, dogru: ist.dogru + 1 }
+                      : { ...ist, yanlis: ist.yanlis + 1 }
+                  );
+                }}
+                disabled={selected === null}
                 style={{
-                  marginTop: 18, padding: 13, borderRadius: 10,
-                  background:
-                    selected === Number(q.DogruCevap)
-                      ? "#24fbb325"
-                      : "#ff7b8c24",
-                  color:
-                    selected === Number(q.DogruCevap)
-                      ? correctColor
-                      : errorColor,
-                  fontWeight: 700, fontSize: 16, minHeight: 32,
-                  boxShadow:
-                    selected === Number(q.DogruCevap)
-                      ? "0 0 8px #22c55e66"
-                      : "0 0 8px #ef444466"
+                  flex: 1, padding: 14, background: mainColor, color: "#fff",
+                  border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
+                  boxShadow: "0 4px 15px #7c3aed18", cursor: selected === null ? "not-allowed" : "pointer"
                 }}
               >
-                {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
-                <br />
-                <span style={{ fontSize: 14, color: "#fff" }}>{q.Aciklama}</span>
-              </div>
-              {current !== questions.length - 1 && (
-                <button
-                  onClick={() => {
-                    setCurrent(c => c + 1);
-                    setSelected(null);
-                    setChecked(false);
-                  }}
-                  style={{
-                    marginTop: 14, width: "100%", padding: 14, background: correctColor, color: "#fff",
-                    border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
-                    boxShadow: "0 4px 12px #22c55e33", cursor: "pointer"
-                  }}
-                >
-                  Sonraki Soru
-                </button>
-              )}
-              {current === questions.length - 1 && !bitti && (
-                <button
-                  onClick={() => setBitti(true)}
-                  style={{
-                    marginTop: 14, width: "100%", padding: 14, background: errorColor, color: "#fff",
-                    border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
-                    boxShadow: "0 4px 12px #ef4444aa", cursor: "pointer"
-                  }}
-                >
-                  Bitir
-                </button>
-              )}
-            </>
+                Kontrol Et
+              </button>
+            )}
+            <button
+              onClick={() => setBitti(true)}
+              style={{
+                flex: 1, padding: 14, background: errorColor, color: "#fff",
+                border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
+                boxShadow: "0 4px 12px #ef4444aa", cursor: "pointer"
+              }}
+            >
+              Bitir
+            </button>
+            {checked && current !== questions.length - 1 && (
+              <button
+                onClick={() => {
+                  setCurrent(c => c + 1);
+                  setSelected(null);
+                  setChecked(false);
+                }}
+                style={{
+                  flex: 1, padding: 14, background: correctColor, color: "#fff",
+                  border: "none", borderRadius: 11, fontWeight: 700, fontSize: 16,
+                  boxShadow: "0 4px 12px #22c55e33", cursor: "pointer"
+                }}
+              >
+                Sonraki Soru
+              </button>
+            )}
+          </div>
+          {checked && (
+            <div
+              style={{
+                marginTop: 14, padding: 13, borderRadius: 10,
+                background:
+                  selected === Number(q.DogruCevap)
+                    ? "#24fbb325"
+                    : "#ff7b8c24",
+                color:
+                  selected === Number(q.DogruCevap)
+                    ? correctColor
+                    : errorColor,
+                fontWeight: 700, fontSize: 16, minHeight: 32,
+                boxShadow:
+                  selected === Number(q.DogruCevap)
+                    ? "0 0 8px #22c55e66"
+                    : "0 0 8px #ef444466"
+              }}
+            >
+              {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
+              <br />
+              <span style={{ fontSize: 14, color: "#fff" }}>{q.Aciklama}</span>
+            </div>
           )}
         </div>
       </div>
