@@ -1,99 +1,38 @@
-// HUKUK QUIZ UYGULAMASI ---
 import React, { useEffect, useState, useRef } from "react";
-import Sidebar from "./Sidebar";
 
-
-export default function Tasarim() {
-  // HOOKLAR FONKSİYONUN İÇİNDE OLMALI!
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 800);
-
+// Sabitler
 const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
 const mainColor = "#7c3aed";
 const errorColor = "#ef4444";
 const correctColor = "#22c55e";
 const bgGradient = "linear-gradient(135deg, #181824 0%, #233356 100%)";
 const cardShadow = "0 4px 32px 0 rgba(49, 69, 130, 0.10), 0 1.5px 6px 0 rgba(49, 69, 130, 0.06)";
-
-// Geliştirilebilir: Buraya yeni dersler ve konular ekleyebilirsin!
 const DERSLER = [
   { ad: "Hukuka Giriş", konular: ["Genel", "Kavramlar", "Kaynaklar"] },
   { ad: "Borçlar Genel", konular: ["Genel Hükümler", "Sözleşmeler"] },
   { ad: "Borçlar Özel", konular: ["Satım", "Kira", "Bağışlama"] },
   { ad: "Ceza Genel", konular: ["Kusur", "Kast", "Taksir"] },
   { ad: "Ceza Özel", konular: ["Kasten Öldürme", "Hırsızlık"] },
-  // ... diğer dersler, konular...
 ];
-
-// Karma quiz için tüm derslerden seçebilmek:
 const KARMA_SECENEK = { ad: "Karma Quiz (Tüm Dersler)", konular: [] };
-
 const SORU_SAYILARI = [5, 10, 20, 50];
-
 const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae";
 const KAYIT_API = "https://api.sheetbest.com/sheets/f97d1aac-7203-4748-a4d4-c5b452b61a94";
-export default function Tasarim() {
-  // PROFİL
-  const [ad, setAd] = useState("");
-  const [tel, setTel] = useState("");
-  const [avatar, setAvatar] = useState(null);
-  const [ders, setDers] = useState(DERSLER[0].ad);
-  const [konu, setKonu] = useState("");
-  const [user, setUser] = useState(getUser());
-  const [soruSayisi, setSoruSayisi] = useState(null);
-  const [zamanSiniri, setZamanSiniri] = useState(false); // isteğe bağlı
-  // SORU YÜKLEME/FİLTRE
-  const [questions, setQuestions] = useState([]);
-  const [originalQuestions, setOriginalQuestions] = useState([]);
-  // QUIZ STATE
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [checked, setChecked] = useState(false);
-  const [bitti, setBitti] = useState(false);
-  const [istatistik, setIstatistik] = useState({ dogru: 0, yanlis: 0, bonus: 0 });
-  const [passed, setPassed] = useState([]); // pas geçenler
-  // SÜRE
-  const [sure, setSure] = useState(0);
-  const [sureAktif, setSureAktif] = useState(false);
-  const sureRef = useRef();
-  // HIZLI BONUS
-  const [bonusTimer, setBonusTimer] = useState(null);
 
-  // MODLAR
-  const [view, setView] = useState("giris"); // giriş, soruSayisi, quiz, bitis, admin, arkadas, profil, soruEkle, kodlu, tekrar, sonuc
-
-  // SORU EKLEME MODAL
-  const [yeniSoru, setYeniSoru] = useState({ Soru: "", A: "", B: "", C: "", D: "", DogruCevap: "", Aciklama: "", Ders: "", Konu: "" });
-  const [showSoruModal, setShowSoruModal] = useState(false);
-
-  // Admin panel açılımı (local şifre ile - güvenli olmayan basic mod)
-  const [admin, setAdmin] = useState(false);
-  // Karma quiz için: dersler toplu mu seçildi?
-  const [karma, setKarma] = useState(false);
-  //ADMİN GİRİŞ YARRRAMMMMMM
-  const ADMIN_KULLANICI = "PEZEBERK"; // DEĞİŞEBİLİR
-  const ADMIN_SIFRE = "3535"; // DEĞİŞEBİLİR 
-  // Basit yanlış analiz: Sık yanlış yapılan soruları belirle (demo)
-  const soruSay = {};
-  kayitlar.forEach(k => {
-    const key = (k.ders || "") + ":" + (k.soru_id || "");
-    if (!soruSay[key]) soruSay[key] = 0;
-    soruSay[key] += Number(k.yanlis || 0);
-  });
-  const enYanlis = Object.entries(soruSay)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  function shuffle(array) {
+// Yardımcı Fonksiyonlar
+function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return arr;}
+  return arr;
+}
 
 function saveUser(u) {
   window.localStorage.setItem("hukuk-calisma-user", JSON.stringify(u));
 }
+
 function getUser() {
   try {
     return JSON.parse(window.localStorage.getItem("hukuk-calisma-user")) || null;
@@ -101,6 +40,7 @@ function getUser() {
     return null;
   }
 }
+
 function formatTelefon(num) {
   let raw = num.replace(/\D/g, "");
   if (raw.startsWith("05")) raw = raw.slice(1);
@@ -111,9 +51,11 @@ function formatTelefon(num) {
   if (raw.length > 8) formatted += " " + raw.slice(8, 10);
   return formatted;
 }
+
 function isTelefonValid(num) {
   return /^5\d{2} \d{3} \d{2} \d{2}$/.test(num.trim());
 }
+
 function slugify(text) {
   return (text || "")
     .toLowerCase()
@@ -126,33 +68,57 @@ function slugify(text) {
     .replace(/[^\w]+/g, "-");
 }
 
+// StatsBar Component
 function StatsBar({ dogru, yanlis, toplam, bonus }) {
   return (
-    <div style={{
-      display: "flex", justifyContent: "center", gap: 18, margin: "14px 0 2px 0"
-    }}>
-      <div style={{
-        color: correctColor, fontWeight: 700, fontSize: 14, letterSpacing: 0.7,
-        background: "#22c55e22", borderRadius: 7, padding: "2px 13px"
-      }}>✔ Doğru: {dogru}</div>
-      <div style={{
-        color: errorColor, fontWeight: 700, fontSize: 14, letterSpacing: 0.7,
-        background: "#ef444422", borderRadius: 7, padding: "2px 13px"
-      }}>✖ Yanlış: {yanlis}</div>
-      <div style={{
-        color: "#fff", fontWeight: 600, fontSize: 14,
-        background: "#7c3aed33", borderRadius: 7, padding: "2px 13px"
-      }}>Toplam: {toplam}</div>
+    <div style={{ display: "flex", justifyContent: "center", gap: 18, margin: "14px 0 2px 0" }}>
+      <div style={{ color: correctColor, fontWeight: 700, fontSize: 14, background: "#22c55e22", borderRadius: 7, padding: "2px 13px" }}>✔ Doğru: {dogru}</div>
+      <div style={{ color: errorColor, fontWeight: 700, fontSize: 14, background: "#ef444422", borderRadius: 7, padding: "2px 13px" }}>✖ Yanlış: {yanlis}</div>
+      <div style={{ color: "#fff", fontWeight: 600, fontSize: 14, background: "#7c3aed33", borderRadius: 7, padding: "2px 13px" }}>Toplam: {toplam}</div>
       {bonus !== undefined && (
-        <div style={{
-          color: "#ffe100", fontWeight: 700, fontSize: 14, background: "#ffe10022", borderRadius: 7, padding: "2px 13px"
-        }}>⚡ Bonus: {bonus}</div>
+        <div style={{ color: "#ffe100", fontWeight: 700, fontSize: 14, background: "#ffe10022", borderRadius: 7, padding: "2px 13px" }}>⚡ Bonus: {bonus}</div>
       )}
     </div>
   );
 }
 
-  // KISAYOL TUŞLARI
+// Ana Component
+export default function Tasarim() {
+  // HOOKS EN ÜSTTE
+  const [ad, setAd] = useState("");
+  const [tel, setTel] = useState("");
+  const [avatar, setAvatar] = useState(null);
+  const [ders, setDers] = useState(DERSLER[0].ad);
+  const [konu, setKonu] = useState("");
+  const [user, setUser] = useState(getUser());
+  const [soruSayisi, setSoruSayisi] = useState(null);
+  const [zamanSiniri, setZamanSiniri] = useState(false); // isteğe bağlı
+  const [questions, setQuestions] = useState([]);
+  const [originalQuestions, setOriginalQuestions] = useState([]);
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [bitti, setBitti] = useState(false);
+  const [istatistik, setIstatistik] = useState({ dogru: 0, yanlis: 0, bonus: 0 });
+  const [passed, setPassed] = useState([]); // pas geçenler
+  const [sure, setSure] = useState(0);
+  const [sureAktif, setSureAktif] = useState(false);
+  const sureRef = useRef();
+  const [bonusTimer, setBonusTimer] = useState(null);
+  const [view, setView] = useState("giris");
+
+  // Admin panel açılımı (local şifre ile - güvenli olmayan basic mod)
+  const [admin, setAdmin] = useState(false);
+  const [karma, setKarma] = useState(false);
+
+  // ADMİN GİRİŞ
+  const ADMIN_KULLANICI = "PEZEBERK"; // DEĞİŞEBİLİR
+  const ADMIN_SIFRE = "3535"; // DEĞİŞEBİLİR
+
+  // Kullanıcı giriş ve yönetimi
+  const telValid = isTelefonValid(tel);
+  const adValid = ad.trim().length > 1;
+
   useEffect(() => {
     function handleKey(e) {
       if (view === "quiz") {
@@ -168,10 +134,9 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-    // eslint-disable-next-line
   }, [view, checked, selected, current, questions, bitti]);
 
- // SORU ÇEKME
+  // Soru çekme işlemi
   useEffect(() => {
     if (view === "quiz" && user && soruSayisi) {
       fetch(SHEET_API)
@@ -182,7 +147,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
             (s.Ders || "").trim().toLowerCase() === user.ders.trim().toLowerCase()
           );
           if (konu) filtered = filtered.filter(s => (s.Konu || "").trim().toLowerCase() === konu.trim().toLowerCase());
-          // randomize & seçilen kadar sınırla
           const secili = shuffle(filtered).slice(0, soruSayisi);
           setQuestions(secili);
           setOriginalQuestions(secili);
@@ -192,10 +156,9 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
           setBonusTimer(null);
         });
     }
-    // eslint-disable-next-line
   }, [view, user, soruSayisi, karma, konu]);
 
-  // SÜRE TUT
+  // Süreyi başlat
   useEffect(() => {
     if (sureAktif) {
       sureRef.current = setInterval(() => setSure(s => s + 1), 1000);
@@ -203,16 +166,15 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
     }
   }, [sureAktif]);
 
-  // SÜRE DOLDUĞUNDA OTOMATİK CHECK/BİTİR
+  // Süre bittiğinde otomatik check veya bitir
   useEffect(() => {
-    if (zamanSiniri && sureAktif && sure >= soruSayisi * 40) { // örnek: 40 sn/soru
+    if (zamanSiniri && sureAktif && sure >= soruSayisi * 40) {
       setBitti(true);
       setSureAktif(false);
     }
-    // eslint-disable-next-line
   }, [sure, zamanSiniri, soruSayisi]);
 
-  // KULLANICI KAYIT POST (quiz bitince)
+  // Kullanıcı kaydını gönder
   useEffect(() => {
     if (bitti && !admin) {
       fetch(KAYIT_API, {
@@ -231,14 +193,11 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
         })
       });
     }
-    // eslint-disable-next-line
   }, [bitti]);
 
   // --- QUIZ YÖNETİM FONKSİYONLARI ---
-
   function handleCheck() {
     setChecked(true);
-    // Hızlı yanıt bonusu
     if (bonusTimer && bonusTimer < 10) setIstatistik(ist => ({ ...ist, bonus: ist.bonus + 1 }));
     setIstatistik(ist =>
       selected === Number(questions[current].DogruCevap)
@@ -246,21 +205,21 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
         : { ...ist, yanlis: ist.yanlis + 1 }
     );
   }
+
   function handleNext() {
     setCurrent(c => c + 1);
     setSelected(null);
     setChecked(false);
     setBonusTimer(0);
   }
+
   function handlePass() {
     if (!passed.includes(current)) setPassed(p => [...p, current]);
     handleNext();
   }
 
-  // --- GİRİŞ VE PROFİL ---
+  // GİRİŞ EKRANI
   if (view === "giris") {
-    const telValid = isTelefonValid(tel);
-    const adValid = ad.trim().length > 1;
     return (
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
@@ -306,7 +265,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
           <div style={{ color: "#ef4444", height: 18, fontSize: 13, marginBottom: 6 }}>
             {!isTelefonValid(tel) && tel.length > 0 && "Lütfen telefonunuzu 5XX XXX XX XX şeklinde girin"}
           </div>
-          {/* Avatar Seçimi */}
           <div style={{ margin: "10px 0" }}>
             <span style={{ color: "#fff", fontWeight: 500 }}>Avatar:</span>{" "}
             <input type="file" accept="image/*"
@@ -327,7 +285,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
               <option key={i} value={d}>{d}</option>
             ))}
           </select>
-          {/* Konu Seçimi */}
           {ders !== KARMA_SECENEK.ad && (
             <select value={konu} onChange={e => setKonu(e.target.value)} style={{
               padding: "8px 10px", borderRadius: 8, width: "95%", fontSize: 15,
@@ -339,7 +296,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
               ))}
             </select>
           )}
-          {/* Zaman Sınırı */}
           <div style={{ margin: "9px 0", color: "#fff" }}>
             <label>
               <input type="checkbox" checked={zamanSiniri} onChange={e => setZamanSiniri(e.target.checked)} />
@@ -395,19 +351,10 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
       </div>
     );
   }
-  // === QUIZ ANA EKRAN ===
+
+  // === QUIZ EKRANI ===
   if (view === "quiz" && questions.length) {
     const q = questions[current];
-
-    // Soru süresi için sayaç
-    const [soruSure, setSoruSure] = useState(0);
-    useEffect(() => {
-      if (zamanSiniri && !checked && !bitti) {
-        setSoruSure(0);
-        const interval = setInterval(() => setSoruSure(s => s + 1), 1000);
-        return () => clearInterval(interval);
-      }
-    }, [current, checked, zamanSiniri, bitti]);
 
     // Kısa cevap mı?
     const kisaCevapli = q.KisaCevap && q.KisaCevap.trim() !== "";
@@ -443,12 +390,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
               background: mainColor, borderRadius: 8, transition: "width 0.5s cubic-bezier(.5,1,.5,1)"
             }} />
           </div>
-          {/* Soru süresi */}
-          {zamanSiniri &&
-            <div style={{ fontSize: 13, color: "#ffe100", textAlign: "right", marginBottom: 3 }}>
-              Soru Süresi: {soruSure} sn / Quiz Süresi: {sure} sn
-            </div>
-          }
           {/* Soru Kartı */}
           <div style={{
             background: "#fff2", padding: 30, borderRadius: 22, boxShadow: cardShadow, marginBottom: 22,
@@ -484,9 +425,9 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
                         selected === i
                           ? checked
                             ? i === Number(q.DogruCevap)
-                              ? `2.5px solid ${correctColor}`
-                              : `2.5px solid ${errorColor}`
-                            : `2.5px solid ${mainColor}`
+                              ? 2.5px solid correctColor
+                              : 2.5px solid errorColor
+                            : 2.5px solid mainColor
                           : "1.5px solid #393a50",
                       background:
                         selected === i
@@ -526,7 +467,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
             )}
             {/* Butonlar */}
             <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
-              {/* Pas geçme */}
               {!checked && (
                 <button
                   onClick={handlePass}
@@ -538,7 +478,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
                   Pas Geç
                 </button>
               )}
-              {/* Kontrol Et */}
               {!checked && (
                 <button
                   onClick={handleCheck}
@@ -552,7 +491,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
                   Kontrol Et
                 </button>
               )}
-              {/* Bitir */}
               <button
                 onClick={() => setBitti(true)}
                 style={{
@@ -563,7 +501,6 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
               >
                 Bitir
               </button>
-              {/* Sonraki Soru */}
               {checked && current !== questions.length - 1 && (
                 <button
                   onClick={handleNext}
@@ -577,496 +514,32 @@ function StatsBar({ dogru, yanlis, toplam, bonus }) {
                 </button>
               )}
             </div>
-            {/* Cevap Geri Bildirim & Kanun Linki */}
+            {/* Cevap Geri Bildirim */}
             {checked && (
               <div
                 style={{
                   marginTop: 14, padding: 13, borderRadius: 10,
                   background:
-                    (selected === Number(q.DogruCevap) || (kisaCevapli && selected?.trim()?.toLowerCase() === q.KisaCevap?.trim()?.toLowerCase()))
+                    (selected === Number(q.DogruCevap))
                       ? "#24fbb325"
                       : "#ff7b8c24",
                   color:
-                    (selected === Number(q.DogruCevap) || (kisaCevapli && selected?.trim()?.toLowerCase() === q.KisaCevap?.trim()?.toLowerCase()))
+                    (selected === Number(q.DogruCevap))
                       ? correctColor
                       : errorColor,
                   fontWeight: 700, fontSize: 16, minHeight: 32,
                   boxShadow:
-                    (selected === Number(q.DogruCevap) || (kisaCevapli && selected?.trim()?.toLowerCase() === q.KisaCevap?.trim()?.toLowerCase()))
+                    (selected === Number(q.DogruCevap))
                       ? "0 0 8px #22c55e66"
                       : "0 0 8px #ef444466"
                 }}
-
-  // === SONUÇ & ANALİZ EKRANI ===
-  if (view === "quiz" && bitti) {
-    // Yanlış yapılan soruları göster ve tekrar quiz
-    const yanlislar = questions
-      .map((q, i) => ({
-        soru: q,
-        dogru: q.KisaCevap
-          ? false // Kısa cevaplılarda doğru bilgisi tutulmadıysa burada karşılaştırabilirsin
-          : i === Number(q.DogruCevap)
-      }))
-      .filter((r, i) => !r.dogru);
-    
-      {/* Duyuru/banner alanı */}
-      <div style={{
-        width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
-        color: "#7c3aed", fontWeight: 700, fontSize: 15, textAlign: "center", letterSpacing: 1.2
-      }}>
-        🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
-      </div>
-     
-{/* Ana view ekranları */}
-      <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
-  {view === "giris" && <div>Giriş Ekranı</div>}
-  {view === "quiz" && <div>Quiz Ekranı</div>}
-  {view === "profil" && <div>Profil Ekranı</div>}
-  {view === "soruEkle" && <div>Soru Ekle Ekranı</div>}
-  {view === "istatistik" && <div>İstatistikler Ekranı</div>}
-  {view === "yardim" && <div>Yardım Ekranı</div>}
-  {view === "adminGiris" && <div>Admin Giriş Ekranı</div>}
-  {view === "admin" && <div>Admin Paneli</div>}
-  {/* ...diğer view'ler */}
-</div>
-
-    return (
-      <div style={{
-        minHeight: "100vh", background: bgGradient, fontFamily: "Inter, sans-serif", color: "#fff", padding: 0, margin: 0
-      }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 20px" }}>
-          <h2 style={{ fontSize: 30, fontWeight: 900, letterSpacing: 1, marginBottom: 14 }}>Quiz Bitti!</h2>
-          <div style={{ fontWeight: 600, fontSize: 19, margin: "18px 0" }}>
-            <span style={{ color: correctColor }}>Doğru: {istatistik.dogru}</span> / <span style={{ color: errorColor }}>Yanlış: {istatistik.yanlis}</span>
-            &nbsp;|&nbsp;Bonus: <span style={{ color: "#ffe100" }}>{istatistik.bonus}</span>
-          </div>
-          <div style={{ fontWeight: 600, fontSize: 16, margin: "0 0 18px 0" }}>
-            <span style={{ color: "#fff" }}>Cevaplanan Soru: {current + (checked ? 1 : 0)} / {questions.length}</span><br />
-            <span style={{ color: "#ffe100" }}>Süre: {sure} sn</span>
-          </div>
-          {/* Yanlışlardan tekrar quiz */}
-          {yanlislar.length > 0 && (
-            <button onClick={() => {
-              setQuestions(shuffle(yanlislar.map(y => y.soru)));
-              setCurrent(0); setBitti(false); setSelected(null); setChecked(false);
-              setIstatistik({ dogru: 0, yanlis: 0, bonus: 0 }); setSure(0);
-            }}
-              style={{
-                background: "#fca311", color: "#fff", border: "none", borderRadius: 8,
-                padding: "10px 22px", fontWeight: 700, fontSize: 16, marginTop: 8, cursor: "pointer"
-              }}>
-              Yanlış Soruları Tekrar Çöz
-            </button>
-          )}
-          {/* Profil/yeniden başla/çıkış */}
-          <div style={{ marginTop: 18 }}>
-            <button onClick={() => { setView("profil"); }}
-              style={{
-                background: mainColor, color: "#fff", border: "none", borderRadius: 8,
-                padding: "10px 22px", fontWeight: 700, fontSize: 16, margin: "6px", cursor: "pointer"
-              }}>
-              Profil & Sonuçlarım
-            </button>
-            <button onClick={() => { setView("soruSayisi"); setBitti(false); setIstatistik({ dogru: 0, yanlis: 0, bonus: 0 }); setSure(0); }}
-              style={{
-                background: "#444", color: "#fff", border: "none", borderRadius: 8,
-                padding: "10px 22px", fontWeight: 700, fontSize: 16, margin: "6px", cursor: "pointer"
-              }}>
-              Tekrar Quiz Çöz
-            </button>
-            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
-              style={{
-                background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
-                padding: "8px 20px", fontWeight: 600, fontSize: 15, marginTop: 6, cursor: "pointer"
-              }}>
-              Çıkış Yap
-            </button>
+              >
+                {selected === Number(q.DogruCevap) ? "Doğru Cevap!" : "Yanlış Cevap!"}
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   }
-  // === PROFİL & SONUÇLARIM EKRANI ===
-  if (view === "profil") {
-    return (
-      <div style={{
-        minHeight: "100vh", background: bgGradient, color: "#fff", fontFamily: "Inter, sans-serif"
-      }}>
-        <div style={{
-          maxWidth: 500, margin: "0 auto", padding: "52px 10px 16px"
-        }}>
-          <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 18 }}>
-            Profil & Sonuçlarım
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 24 }}>
-            {user.avatar && <img src={user.avatar} alt="avatar" style={{ width: 56, height: 56, borderRadius: "50%", marginRight: 16, border: "2px solid #fff" }} />}
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 20 }}>{user.ad}</div>
-              <div style={{ fontWeight: 400, fontSize: 15, opacity: 0.85 }}>{user.tel}</div>
-              <div style={{ fontWeight: 600, fontSize: 15, color: "#aef" }}>{user.ders}</div>
-            </div>
-          </div>
-          <div style={{ marginBottom: 28 }}>
-            <span style={{
-              display: "inline-block",
-              fontWeight: 700, fontSize: 18, color: correctColor,
-              background: "#22c55e33", borderRadius: 8, padding: "6px 15px", marginRight: 10
-            }}>
-              ✔ {istatistik.dogru} Doğru
-            </span>
-            <span style={{
-              display: "inline-block",
-              fontWeight: 700, fontSize: 18, color: errorColor,
-              background: "#ef444422", borderRadius: 8, padding: "6px 15px"
-            }}>
-              ✖ {istatistik.yanlis} Yanlış
-            </span>
-            <span style={{
-              display: "inline-block",
-              fontWeight: 700, fontSize: 18, color: "#ffe100",
-              background: "#ffe10033", borderRadius: 8, padding: "6px 15px", marginLeft: 10
-            }}>
-              ⚡ {istatistik.bonus} Bonus
-            </span>
-          </div>
-          <button onClick={() => setView("soruEkle")}
-            style={{
-              background: "#8b5cf6", color: "#fff", border: "none", borderRadius: 8,
-              padding: "10px 22px", fontWeight: 700, fontSize: 17, margin: "6px", cursor: "pointer"
-            }}>
-            Soru Ekle / Soru Öner
-          </button>
-          <button onClick={() => setView("soruSayisi")}
-            style={{
-              background: mainColor, color: "#fff", border: "none", borderRadius: 8,
-              padding: "10px 22px", fontWeight: 700, fontSize: 17, margin: "6px", cursor: "pointer"
-            }}>
-            Yeni Quiz Başlat
-          </button>
-          <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
-            style={{
-              background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
-              padding: "8px 20px", fontWeight: 600, fontSize: 15, marginTop: 6, cursor: "pointer"
-            }}>
-            Çıkış Yap
-          </button>
-          {/* Quiz Koduyla Paylaş */}
-          <div style={{ marginTop: 30 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Quiz Koduyla Arkadaşını Davet Et:</div>
-            <input
-              type="text"
-              readOnly
-              value={window.location.origin + window.location.pathname + "?kod=" + slugify(user.ad + Date.now())}
-              style={{
-                width: "90%", padding: "7px 12px", borderRadius: 7, border: "none", background: "#fff9", fontWeight: 700,
-                fontSize: 15, letterSpacing: 1, marginBottom: 5
-              }}
-              onClick={e => e.target.select()}
-            />
-            <div style={{ fontSize: 12, color: "#ccc" }}>
-              Bu linki arkadaşınla paylaş, o da quiz çözsün!
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // === BASİT ADMIN PANELİ DEMOSU ===
-  if (admin) {
-    // Gerçek admin için Sheet'ten kayıtları çekmek gerekir (ör: KAYIT_API'ya GET ile)
-    // Burada sadece basit bir demo: Giriş yapan kişinin son quiz'leri gösteriliyor.
-    return (
-      <div style={{
-        minHeight: "100vh", background: bgGradient, color: "#fff", fontFamily: "Inter, sans-serif", padding: 40
-      }}>
-        <h2 style={{ fontWeight: 900, fontSize: 28, marginBottom: 18 }}>Admin Paneli (Demo)</h2>
-        <div>
-          <b>Kullanıcı:</b> {user.ad} <br />
-          <b>Telefon:</b> {user.tel} <br />
-          <b>Quiz Başarı:</b> Doğru: {istatistik.dogru} / Yanlış: {istatistik.yanlis} / Bonus: {istatistik.bonus}
-        </div>
-        <div style={{ marginTop: 22 }}>
-          <button onClick={() => setView("profil")}
-            style={{
-              background: mainColor, color: "#fff", border: "none", borderRadius: 8,
-              padding: "10px 22px", fontWeight: 700, fontSize: 17, margin: "6px", cursor: "pointer"
-            }}>
-            Profil Ekranına Dön
-          </button>
-        </div>
-        <div style={{ marginTop: 28 }}>
-          <b>En Çok Yanlış Yapılan Sorular</b>
-          <ul>
-            {/* Gerçek veriye Sheet'ten GET ile çekilerek (fetch KAYIT_API) en çok yanlış yapılan 5 soru gösterilebilir. */}
-            <li>1. TBK m. 27 - Hukuka ve Ahlaka Aykırılık</li>
-            <li>2. Ceza Genel - Taksir ve Kasıt Ayrımı</li>
-            <li>3. Borçlar Genel - Sözleşmenin Kurulması</li>
-            <li>4. Anayasa - Temel Haklar</li>
-            <li>5. Ceza Özel - Hırsızlık Suçu Unsurları</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-  // === ARKADAŞLA YARIŞMA EKRANI (TEMEL DEMO) ===
-  if (view === "arkadas") {
-    return (
-      <div style={{
-        minHeight: "100vh", background: bgGradient, color: "#fff", fontFamily: "Inter, sans-serif"
-      }}>
-        <div style={{ maxWidth: 500, margin: "0 auto", padding: "60px 10px 16px" }}>
-          <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 16 }}>
-            Arkadaşla Yarışma (Demo)
-          </h2>
-          <div>
-            Bu demo, arkadaşına verdiğin quiz koduyla aynı anda başlayacağınız şekilde kurgulanmıştır.
-            <br /><br />
-            <b>Kod:</b> <span style={{ background: "#fff1", padding: "4px 10px", borderRadius: 7 }}>
-              {window.location.origin + window.location.pathname + "?kod=" + slugify(user.ad + Date.now())}
-            </span>
-            <br /><br />
-            Arkadaşın bu linkten giriş yapıp quiz başlatırsa, birlikte çözdüğünüzde sonuçları puan sıralaması olarak profil ekranında görebilirsiniz!
-            <br /><br />
-            (Gerçek zamanlı skor takibi için backend gerekir!)
-          </div>
-          <button onClick={() => setView("profil")}
-            style={{
-              marginTop: 26, background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
-              padding: "10px 22px", fontWeight: 700, fontSize: 17, cursor: "pointer"
-            }}>
-            Profil Ekranına Dön
-          </button>
-        </div>
-      </div>
-    );
-  }
-{q.Aciklama?.split(/(TBK m\. \d+|TCK m\. \d+)/g).map((chunk, i) =>
-  /^(TBK|TCK) m\. \d+$/.test(chunk) ?
-    <a key={i} href={`https://www.mevzuat.gov.tr/${chunk.startsWith("TBK") ? "MevzuatMetin/1.5.6098.pdf" : "MevzuatMetin/1.5.5237.pdf"}`} target="_blank" rel="noopener noreferrer" style={{ color: "#aef", fontWeight: 700 }}>{chunk}</a>
-    : chunk
-)}
-<a href="https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6098.pdf" target="_blank">TBK m. 27</a>
-<button
-  type="button"
-  onClick={() => setView("adminGiris")}
-  style={{
-    background: "#374151",
-    color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    padding: "8px 22px",
-    fontWeight: 600,
-    fontSize: 15,
-    marginTop: 8,
-    cursor: "pointer"
-  }}
->
-  Admin Girişi
-</button>
-const [adminKullanici, setAdminKullanici] = useState("");
-const [adminSifre, setAdminSifre] = useState("");
-const [adminHata, setAdminHata] = useState("");
-// === ADMIN GİRİŞ EKRANI ===
-if (view === "adminGiris") {
-  return (
-    <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: bgGradient, fontFamily: "Inter, sans-serif"
-    }}>
-      <form onSubmit={e => {
-        e.preventDefault();
-        if (
-          adminKullanici === ADMIN_KULLANICI &&
-          adminSifre === ADMIN_SIFRE
-        ) {
-          setAdmin(true);
-          setView("admin");
-        } else {
-          setAdminHata("Kullanıcı adı veya şifre yanlış!");
-        }
-      }}
-        style={{
-          background: "#fff2", borderRadius: 18, boxShadow: cardShadow,
-          padding: 36, minWidth: 330, textAlign: "center"
-        }}>
-        <h2 style={{ fontWeight: 800, fontSize: 23, marginBottom: 14, color: "#fff" }}>Admin Girişi</h2>
-        <input
-          placeholder="Kullanıcı Adı"
-          value={adminKullanici}
-          onChange={e => setAdminKullanici(e.target.value)}
-          style={{
-            padding: "10px 16px", borderRadius: 8, border: "none",
-            width: "90%", marginBottom: 12, fontSize: 17, outline: "none"
-          }}
-          autoFocus
-        /><br />
-        <input
-          placeholder="Şifre"
-          value={adminSifre}
-          onChange={e => setAdminSifre(e.target.value)}
-          style={{
-            padding: "10px 16px", borderRadius: 8, border: "none",
-            width: "90%", marginBottom: 12, fontSize: 17, outline: "none"
-          }}
-          type="password"
-        /><br />
-        <div style={{ color: "#ef4444", height: 18, fontSize: 13, marginBottom: 8 }}>
-          {adminHata}
-        </div>
-        <button type="submit"
-          style={{
-            background: mainColor, color: "#fff", border: "none", borderRadius: 8,
-            padding: "10px 22px", fontWeight: 700, fontSize: 17,
-            cursor: "pointer", boxShadow: "0 2px 8px #7c3aed22"
-          }}>
-          Giriş Yap
-        </button>
-        <button
-          type="button"
-          onClick={() => setView("giris")}
-          style={{
-            background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
-            padding: "8px 20px", fontWeight: 600, fontSize: 15, marginLeft: 10, cursor: "pointer"
-          }}>
-          Geri Dön
-        </button>
-      </form>
-    </div>
-  );
 }
-if (admin && view === "admin") {
-  const [kayitlar, setKayitlar] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(KAYIT_API)
-      .then(res => res.json())
-      .then(data => {
-        setKayitlar(data.slice(-100).reverse());
-        setLoading(false);
-      });
-  }, []);
-
-  return (
-    <div style={{
-      minHeight: "100vh", background: bgGradient, color: "#fff", fontFamily: "Inter, sans-serif", padding: 30
-    }}>
-      <h2 style={{ fontWeight: 900, fontSize: 28, marginBottom: 16 }}>Admin Paneli</h2>
-      <button onClick={() => { setAdmin(false); setView("giris"); }}
-        style={{
-          background: errorColor, color: "#fff", border: "none", borderRadius: 7,
-          padding: "7px 16px", fontWeight: 700, fontSize: 15, marginBottom: 12, cursor: "pointer"
-        }}>
-        Çıkış Yap (Admin)
-      </button>
-      <h4 style={{ color: "#ffe100", marginTop: 12 }}>Son 100 Quiz Kaydı</h4>
-      {loading ? <div>Yükleniyor...</div> : (
-        <div style={{
-          maxHeight: 320, overflow: "auto", background: "#2228", borderRadius: 8, padding: 12, marginBottom: 20
-        }}>
-          <table style={{ width: "100%", fontSize: 13, color: "#fff" }}>
-            <thead>
-              <tr>
-                <th>Ad</th>
-                <th>Telefon</th>
-                <th>Ders</th>
-                <th>Doğru</th>
-                <th>Yanlış</th>
-                <th>Süre</th>
-                <th>Tarih</th>
-              </tr>
-            </thead>
-            <tbody>
-              {kayitlar.map((k, i) => (
-                <tr key={i}>
-                  <td>{k.ad}</td>
-                  <td>{k.telefon}</td>
-                  <td>{k.ders}</td>
-                  <td>{k.dogru}</td>
-                  <td>{k.yanlis}</td>
-                  <td>{k.sure}</td>
-                  <td>{k.tarih}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <h4 style={{ color: "#ffe100", marginTop: 22 }}>En Çok Yanlış Yapılan Sorular (Demo)</h4>
-      <ul>
-        {enYanlis.length === 0
-          ? <li>Yeterli veri yok</li>
-          : enYanlis.map(([key, count], idx) =>
-            <li key={idx}>{key} - Yanlış: {count}</li>
-          )}
-      </ul>
-      <button onClick={() => setView("profil")}
-        style={{
-          marginTop: 26, background: "#fff1", color: "#fff", border: "none", borderRadius: 8,
-          padding: "10px 22px", fontWeight: 700, fontSize: 17, cursor: "pointer"
-        }}>
-        Profil Ekranına Dön
-      </button>
-    </div>
-  );
-}
-//Sidebar
-return (
-  <div style={{ display: "flex", minHeight: "100vh", background: "#eef2ff" }}>
-    <Sidebar
-      user={user}
-      view={view}
-      setView={setView}
-      sidebarOpen={sidebarOpen}
-      setSidebarOpen={setSidebarOpen}
-    />
-    <div style={{
-      flex: 1, marginLeft: window.innerWidth > 800 ? 220 : 0,
-      minHeight: "100vh", background: "#f8fafc", boxShadow: "-2px 0 18px #0001",
-      transition: "margin-left 0.2s", position: "relative"
-    }}>
-      {/* Sağ üst profil kutusu */}
-      <div style={{
-        position: "absolute", right: 20, top: 18, zIndex: 11,
-        display: "flex", alignItems: "center", gap: 8
-      }}>
-        {user && (
-          <>
-            <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.ad} alt=""
-              style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #a78bfa" }} />
-            <span style={{ fontWeight: 700 }}>{user.ad}</span>
-            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
-              style={{
-                background: "#fff", color: "#a78bfa", border: "none", borderRadius: 8,
-                fontWeight: 700, fontSize: 14, padding: "8px 13px", cursor: "pointer"
-              }}>Çıkış</button>
-          </>
-        )}
-      </div>
-      {/* Duyuru/banner alanı */}
-      <div style={{
-        width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
-        color: "#7c3aed", fontWeight: 700, fontSize: 15, textAlign: "center", letterSpacing: 1.2
-      }}>
-        🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
-      </div>
-      {/* Ana view ekranları */}
-      <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
-        {view === "giris" && /* Giriş ekranı kodun */}
-        {view === "quiz" && /* Quiz kodun */}
-        {view === "profil" && /* Profil ekranın */}
-        {view === "soruEkle" && /* Soru ekle ekranı */}
-        {view === "istatistik" && /* İstatistikler ekranı */}
-        {view === "yardim" && /* Yardım ekranı */}
-        {view === "adminGiris" && /* Admin giriş ekranı */}
-        {view === "admin" && /* Admin paneli */}
-        {/* ...diğer view'ler */}
-      </div>
-    </div>
-  </div>
-);
-}
-
-
-  
-
