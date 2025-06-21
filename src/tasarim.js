@@ -624,38 +624,7 @@ export default function Tasarim() {
           : i === Number(q.DogruCevap)
       }))
       .filter((r, i) => !r.dogru);
-return (
-  <div style={{ display: "flex", minHeight: "100vh", background: "#eef2ff" }}>
-    <Sidebar
-      user={user}
-      view={view}
-      setView={setView}
-      sidebarOpen={sidebarOpen}
-      setSidebarOpen={setSidebarOpen}
-    />
-    <div style={{
-      flex: 1, marginLeft: window.innerWidth > 800 ? 220 : 0,
-      minHeight: "100vh", background: "#f8fafc", boxShadow: "-2px 0 18px #0001",
-      transition: "margin-left 0.2s", position: "relative"
-    }}>
-      {/* Sağ üst profil kutusu */}
-      <div style={{
-        position: "absolute", right: 20, top: 18, zIndex: 11,
-        display: "flex", alignItems: "center", gap: 8
-      }}>
-        {user && (
-          <>
-            <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.ad} alt=""
-              style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #a78bfa" }} />
-            <span style={{ fontWeight: 700 }}>{user.ad}</span>
-            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
-              style={{
-                background: "#fff", color: "#a78bfa", border: "none", borderRadius: 8,
-                fontWeight: 700, fontSize: 14, padding: "8px 13px", cursor: "pointer"
-              }}>Çıkış</button>
-          </>
-        )}
-      </div>
+</div>
       {/* Duyuru/banner alanı */}
       <div style={{
         width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
