@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from "react";
 
-const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
+const UYGULAMA_ADI = "HUKUK FAKülTESİ ÇALIŞMA";
 const mainColor = "#7c3aed";
 const errorColor = "#ef4444";
 const correctColor = "#22c55e";
 const bgGradient = "linear-gradient(135deg, #181824 0%, #233356 100%)";
 const cardShadow = "0 4px 32px 0 rgba(49, 69, 130, 0.10), 0 1.5px 6px 0 rgba(49, 69, 130, 0.06)";
 
-// Tüm dersler burada (seçeneklere yazılacak adlar)
 const DERSLER = [
   "Hukuka Giriş", "Borçlar Genel", "Borçlar Özel", "Ceza Genel", "Ceza Özel",
   "Milletler Arası Hukuk", "İdare Hukuku", "Türk Hukuk Tarihi", "Anayasa Hukuku",
   "Roma Hukuku", "Aile Hukuku", "Medeni Hukuk"
 ];
 
-// Soru havuzu SheetBest API linkin (tek sheet!)
-const SHEET_API = "https://api.sheetbest.com/sheets/TEK-SORU-HAVUZU-LINKIN";
-// Kullanıcı sonuçlarını kaydedeceğin SheetBest POST endpointi
-const KAYIT_API = "https://api.sheetbest.com/sheets/SONUC-KAYIT-LINKIN";
+// --- SHEETBEST API LINKLERİN (Senin sheets bağlantına özel!) ---
+const SHEET_API = "https://api.sheetbest.com/sheets/3758ce4e-d7e8-4a1d-9395-85e022e57b16"; // Soru havuzu
+const KAYIT_API = "https://api.sheetbest.com/sheets/81b84129-89bc-4fa6-bbab-5e7c128dfbe2";  // Kayıtlar
 
 function shuffle(array) {
   const arr = [...array];
