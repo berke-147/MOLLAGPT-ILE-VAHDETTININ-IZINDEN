@@ -9,7 +9,7 @@ export default function App() {
   const [checked, setChecked] = useState(false);
 
   // <-- BURAYI DÜZENLE: Sheet API url'ini kendi linkinle değiştir!
-  const SHEET_API = "https://opensheet.vercel.app/1Xyz12345ABCDE67890/Sheet1";
+  const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae";
 
   useEffect(() => {
     fetch(SHEET_API)
