@@ -14,8 +14,19 @@ const correctColor = "#22c55e";
 // DERS LİSTESİ (Geliştirilebilir)
 const DERSLER = [
   { ad: "Hukuka Giriş", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
-  // { ad: "Anayasa", sheet: "DİĞER_SHEET_LINKİNİ_BURAYA_EKLE" },
+  { ad: "Borçlar Genel", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Borçlar Özel", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Ceza Genel", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Ceza Özel", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Milletler Arası Hukuk", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "İdare Hukuku", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Türk Hukuk Tarihi", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Anayasa Hukuku", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Roma Hukuku", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Aile Hukuku", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
+  { ad: "Medeni Hukuk", sheet: "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae" },
 ];
+
 
 const KAYIT_API = "https://api.sheetbest.com/sheets/ENTER-YOUR-KAYIT-POST-LINK"; // <-- buraya SheetBest POST linkin
 
