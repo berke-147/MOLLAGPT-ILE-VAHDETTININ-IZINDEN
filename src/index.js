@@ -1,7 +1,6 @@
-/public
-  /index.html
-/src
-  /App.js
-  /index.js   ← BU DOSYA ŞART!
-package.json
-vercel.json
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
