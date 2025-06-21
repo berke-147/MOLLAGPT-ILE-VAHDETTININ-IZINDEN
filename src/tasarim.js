@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const UYGULAMA_ADI = "HUKUK FAKülTESİ ÇALIŞMA";
+const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
 const mainColor = "#7c3aed";
 const errorColor = "#ef4444";
 const correctColor = "#22c55e";
@@ -13,9 +13,9 @@ const DERSLER = [
   "Roma Hukuku", "Aile Hukuku", "Medeni Hukuk"
 ];
 
-// --- SHEETBEST API LINKLERİN (Senin sheets bağlantına özel!) ---
-const SHEET_API = "https://api.sheetbest.com/sheets/3758ce4e-d7e8-4a1d-9395-85e022e57b16"; // Soru havuzu
-const KAYIT_API = "https://api.sheetbest.com/sheets/81b84129-89bc-4fa6-bbab-5e7c128dfbe2";  // Kayıtlar
+// --- SENİN GÜNCEL SHEETBEST API LINKLERİN ---
+const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae"; // Soru havuzu
+const KAYIT_API = "https://api.sheetbest.com/sheets/f97d1aac-7203-4748-a4d4-c5b452b61a94";  // Kayıtlar
 
 function shuffle(array) {
   const arr = [...array];
@@ -70,7 +70,10 @@ export default function Tasarim() {
     fetch(SHEET_API)
       .then(res => res.json())
       .then(data => {
-        const filtered = data.filter(s => s.Ders === user.ders);
+        // HATALI/FAZLA BOŞLUK vb. varsa toleranslı eşleştirme:
+        const filtered = data.filter(s =>
+          (s.Ders || "").trim().toLowerCase() === user.ders.trim().toLowerCase()
+        );
         setQuestions(shuffle(filtered));
       });
   }, [user]);
