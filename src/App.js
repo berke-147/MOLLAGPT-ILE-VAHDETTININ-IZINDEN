@@ -1,24 +1,32 @@
 import React, { useEffect, useState } from "react";
 
-export default function App() {
+const bgGradient =
+  "linear-gradient(135deg, #f2e9f7 0%, #e0ecfa 100%)";
+const cardShadow =
+  "0 4px 32px 0 rgba(49, 69, 130, 0.07), 0 1.5px 6px 0 rgba(49, 69, 130, 0.04)";
+const mainColor = "#7c3aed";
+const successColor = "#22c55e";
+const errorColor = "#ef4444";
+
+export default function Tasarim() {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [checked, setChecked] = useState(false);
 
-  // <-- BURAYI DÜZENLE: Sheet API url'ini kendi linkinle değiştir!
+  // Sheet API url'ini kendi linkinle değiştir!
   const SHEET_API = "https://api.sheetbest.com/sheets/23bc6d7b-d5a0-4068-b3b5-dedb85343aae";
 
   useEffect(() => {
     fetch(SHEET_API)
       .then(res => res.json())
-      .then(data => {
-        // Soruları karıştırmak istersen shuffle fonksiyonu yazabilirsin
-        setQuestions(data);
-      });
+      .then(data => setQuestions(data));
   }, []);
 
-  if (!questions.length) return <div>Yükleniyor...</div>;
+  if (!questions.length)
+    return (
+      <div className="loading">Yükleniyor...</div>
+    );
 
   const q = questions[current];
 
@@ -34,115 +42,253 @@ export default function App() {
     setChecked(false);
   }
 
+  // PROGRESS BAR
+  const progress = Math.round(((current + 1) / questions.length) * 100);
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f3f4f6", padding: 32 }}>
-      <h1 style={{ fontSize: 28, fontWeight: "bold", marginBottom: 24 }}>
-        MOLLA GPT İLE VAHDETTİNİN İZİNDEN
-      </h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: bgGradient,
+        padding: 0,
+        margin: 0,
+        fontFamily: "Inter, sans-serif"
+      }}
+    >
       <div
         style={{
-          background: "#fff",
-          padding: 24,
-          borderRadius: 18,
-          maxWidth: 600,
-          margin: "auto",
-          boxShadow: "0 2px 16px #0001"
+          maxWidth: 440,
+          margin: "0 auto",
+          padding: "56px 12px 24px",
+          minHeight: "100vh"
         }}
       >
-        <div style={{ fontSize: 18, marginBottom: 16 }}>{q.Soru}</div>
-        <div style={{ display: "grid", gap: 12 }}>
-          {[q.A, q.B, q.C, q.D].map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => handleSelect(i)}
-              disabled={checked}
-              style={{
-                textAlign: "left",
-                padding: "12px 20px",
-                borderRadius: 10,
-                border:
-                  selected === i
-                    ? checked
-                      ? i === Number(q.DogruCevap)
-                        ? "2px solid #3b9b37"
-                        : "2px solid #ce2020"
-                      : "2px solid #2563eb"
-                    : "1px solid #ccc",
-                background:
-                  selected === i
-                    ? checked
-                      ? i === Number(q.DogruCevap)
-                        ? "#e6ffe7"
-                        : "#ffe6e6"
-                      : "#e7f0ff"
-                    : "#f8fafc",
-                cursor: checked ? "default" : "pointer"
-              }}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-        {!checked ? (
-          <button
-            onClick={handleCheck}
-            disabled={selected === null}
+        <h1
+          style={{
+            fontSize: 32,
+            fontWeight: 800,
+            marginBottom: 16,
+            background: "linear-gradient(90deg,#7c3aed 0,#22c55e 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: 1
+          }}
+        >
+          MOLLA GPT <span style={{ opacity: 0.7 }}>&</span> VAHDETTİNİN İZİNDEN
+        </h1>
+        {/* Progress Bar */}
+        <div
+          style={{
+            width: "100%",
+            height: 8,
+            background: "#f0f1f6",
+            borderRadius: 10,
+            marginBottom: 24,
+            overflow: "hidden",
+            boxShadow: "0 1px 4px #0001"
+          }}
+        >
+          <div
             style={{
-              marginTop: 24,
-              width: "100%",
-              padding: 12,
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: "bold",
-              cursor: selected === null ? "not-allowed" : "pointer"
+              width: `${progress}%`,
+              height: "100%",
+              background: mainColor,
+              transition: "width 0.5s cubic-bezier(.5,1,.5,1)",
+              borderRadius: 10
             }}
-          >
-            Kontrol Et
-          </button>
-        ) : (
-          <>
-            <div
-              style={{
-                marginTop: 24,
-                padding: 14,
-                borderRadius: 10,
-                background:
-                  selected === Number(q.DogruCevap) ? "#e6ffe7" : "#ffe6e6",
-                color: selected === Number(q.DogruCevap) ? "#228b22" : "#b91c1c"
-              }}
-            >
-              {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
-              <br />
-              <span style={{ fontSize: 14 }}>{q.Aciklama}</span>
-            </div>
+          />
+        </div>
+        {/* Card */}
+        <div
+          style={{
+            background: "#fff",
+            padding: 32,
+            borderRadius: 24,
+            boxShadow: cardShadow,
+            marginBottom: 24,
+            minHeight: 260,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between"
+          }}
+        >
+          <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 20 }}>
+            {q.Soru}
+          </div>
+          <div style={{ display: "grid", gap: 14, marginBottom: 6 }}>
+            {[q.A, q.B, q.C, q.D].map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => handleSelect(i)}
+                disabled={checked}
+                style={{
+                  textAlign: "left",
+                  padding: "15px 18px",
+                  borderRadius: 14,
+                  fontSize: 16,
+                  border:
+                    selected === i
+                      ? checked
+                        ? i === Number(q.DogruCevap)
+                          ? `2.5px solid ${successColor}`
+                          : `2.5px solid ${errorColor}`
+                        : `2.5px solid ${mainColor}`
+                      : "1.5px solid #e3e5ed",
+                  background:
+                    selected === i
+                      ? checked
+                        ? i === Number(q.DogruCevap)
+                          ? "#e6ffe7"
+                          : "#ffe6e6"
+                        : "#f4f3fd"
+                      : "#f9f9fb",
+                  color: "#222",
+                  fontWeight: selected === i ? 700 : 500,
+                  transition: "all 0.15s",
+                  boxShadow:
+                    selected === i
+                      ? checked
+                        ? i === Number(q.DogruCevap)
+                          ? "0 0 8px #22c55e77"
+                          : "0 0 8px #ef444477"
+                        : "0 0 7px #7c3aed11"
+                      : "",
+                  cursor: checked ? "default" : "pointer",
+                  outline: "none"
+                }}
+                onMouseOver={e => {
+                  if (!checked && selected !== i)
+                    e.currentTarget.style.background = "#e7eafe";
+                }}
+                onMouseOut={e => {
+                  if (!checked && selected !== i)
+                    e.currentTarget.style.background = "#f9f9fb";
+                }}
+              >
+                <span style={{ opacity: 0.5, fontWeight: 600 }}>
+                  {"ABCD"[i]}){" "}
+                </span>
+                {opt}
+              </button>
+            ))}
+          </div>
+          {!checked ? (
             <button
-              onClick={handleNext}
-              disabled={current === questions.length - 1}
+              onClick={handleCheck}
+              disabled={selected === null}
               style={{
-                marginTop: 18,
+                marginTop: 26,
                 width: "100%",
-                padding: 12,
-                background: "#22c55e",
+                padding: 16,
+                background: mainColor,
                 color: "#fff",
                 border: "none",
-                borderRadius: 8,
-                fontWeight: "bold",
-                cursor:
-                  current === questions.length - 1
-                    ? "not-allowed"
-                    : "pointer"
+                borderRadius: 14,
+                fontWeight: 700,
+                fontSize: 16,
+                boxShadow: "0 4px 18px #7c3aed22",
+                cursor: selected === null ? "not-allowed" : "pointer",
+                letterSpacing: 0.5,
+                transition: "all .2s"
               }}
             >
-              Sonraki Soru
+              Cevabı Kontrol Et
             </button>
-          </>
-        )}
+          ) : (
+            <>
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: 18,
+                  borderRadius: 12,
+                  background:
+                    selected === Number(q.DogruCevap)
+                      ? "#e6ffe7"
+                      : "#ffe6e6",
+                  color:
+                    selected === Number(q.DogruCevap)
+                      ? "#22c55e"
+                      : "#ef4444",
+                  fontWeight: 700,
+                  fontSize: 16,
+                  minHeight: 40,
+                  boxShadow:
+                    selected === Number(q.DogruCevap)
+                      ? "0 0 8px #22c55e66"
+                      : "0 0 8px #ef444466"
+                }}
+              >
+                {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
+                <br />
+                <span style={{ fontSize: 13, fontWeight: 500, color: "#444" }}>
+                  {q.Aciklama}
+                </span>
+              </div>
+              <button
+                onClick={handleNext}
+                disabled={current === questions.length - 1}
+                style={{
+                  marginTop: 18,
+                  width: "100%",
+                  padding: 16,
+                  background: successColor,
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 14,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  boxShadow: "0 4px 18px #22c55e33",
+                  cursor:
+                    current === questions.length - 1
+                      ? "not-allowed"
+                      : "pointer",
+                  letterSpacing: 0.5,
+                  transition: "all .2s"
+                }}
+              >
+                Sonraki Soru
+              </button>
+            </>
+          )}
+        </div>
+        {/* Mini footer */}
+        <div
+          style={{
+            textAlign: "center",
+            color: "#7c3aed",
+            fontSize: 14,
+            marginTop: 22,
+            letterSpacing: 1,
+            opacity: 0.8
+          }}
+        >
+          Soru {current + 1} / {questions.length}
+        </div>
+        <div
+          style={{
+            textAlign: "center",
+            color: "#9ca3af",
+            fontSize: 11,
+            marginTop: 10,
+            letterSpacing: 0.2
+          }}
+        >
+          © {new Date().getFullYear()} MOLLA GPT & Vahdettinin İzinden <span style={{ fontWeight: 600 }}>Quiz Uygulaması</span>
+        </div>
       </div>
-      <div style={{ textAlign: "center", color: "#888", fontSize: 12, marginTop: 18 }}>
-        Soru {current + 1} / {questions.length}
-      </div>
+      {/* Yükleniyor animasyonu için ufak bir stil */}
+      <style>{`
+        .loading {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.4rem;
+          color: #7c3aed;
+          background: ${bgGradient};
+          letter-spacing: 1.5px;
+        }
+      `}</style>
     </div>
   );
 }
