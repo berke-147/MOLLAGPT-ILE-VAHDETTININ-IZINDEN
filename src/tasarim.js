@@ -1,5 +1,6 @@
 // --- BÜYÜK, GELİŞMİŞ VE MODÜLER HUKUK QUIZ UYGULAMASI ---
 // Not: Ekstra detaylandırmak istediğin alanları bana ayrı sorabilirsin!
+const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 800);
 
 import React, { useEffect, useState, useRef } from "react";
 
@@ -623,6 +624,60 @@ export default function Tasarim() {
           : i === Number(q.DogruCevap)
       }))
       .filter((r, i) => !r.dogru);
+return (
+  <div style={{ display: "flex", minHeight: "100vh", background: "#eef2ff" }}>
+    <Sidebar
+      user={user}
+      view={view}
+      setView={setView}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+    />
+    <div style={{
+      flex: 1, marginLeft: window.innerWidth > 800 ? 220 : 0,
+      minHeight: "100vh", background: "#f8fafc", boxShadow: "-2px 0 18px #0001",
+      transition: "margin-left 0.2s", position: "relative"
+    }}>
+      {/* Sağ üst profil kutusu */}
+      <div style={{
+        position: "absolute", right: 20, top: 18, zIndex: 11,
+        display: "flex", alignItems: "center", gap: 8
+      }}>
+        {user && (
+          <>
+            <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.ad} alt=""
+              style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #a78bfa" }} />
+            <span style={{ fontWeight: 700 }}>{user.ad}</span>
+            <button onClick={() => { setUser(null); saveUser(null); setView("giris"); }}
+              style={{
+                background: "#fff", color: "#a78bfa", border: "none", borderRadius: 8,
+                fontWeight: 700, fontSize: 14, padding: "8px 13px", cursor: "pointer"
+              }}>Çıkış</button>
+          </>
+        )}
+      </div>
+      {/* Duyuru/banner alanı */}
+      <div style={{
+        width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
+        color: "#7c3aed", fontWeight: 700, fontSize: 15, textAlign: "center", letterSpacing: 1.2
+      }}>
+        🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
+      </div>
+      {/* Ana view ekranları */}
+      <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
+        {view === "giris" && /* Giriş ekranı kodun */}
+        {view === "quiz" && /* Quiz kodun */}
+        {view === "profil" && /* Profil ekranın */}
+        {view === "soruEkle" && /* Soru ekle ekranı */}
+        {view === "istatistik" && /* İstatistikler ekranı */}
+        {view === "yardim" && /* Yardım ekranı */}
+        {view === "adminGiris" && /* Admin giriş ekranı */}
+        {view === "admin" && /* Admin paneli */}
+        {/* ...diğer view'ler */}
+      </div>
+    </div>
+  </div>
+);
 
     return (
       <div style={{
