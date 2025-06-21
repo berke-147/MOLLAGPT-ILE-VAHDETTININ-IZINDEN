@@ -647,36 +647,6 @@ export default function Tasarim() {
                       ? "0 0 8px #22c55e66"
                       : "0 0 8px #ef444466"
                 }}
-              >
-                {(selected === Number(q.DogruCevap) || (kisaCevapli && selected?.trim()?.toLowerCase() === q.KisaCevap?.trim()?.toLowerCase())) ? "Doğru!" : "Yanlış!"}
-                <br />
-                <span style={{ fontSize: 14, color: "#fff" }}>
-                  {/* Kanun Maddesi Linkini Açıklamadan Otomatik YAKALA */}
-                  {q.Aciklama?.split(/(TBK m\. \d+|TCK m\. \d+)/g).map((chunk, i) =>
-                    /^(TBK|TCK) m\. \d+$/.test(chunk) ?
-                      <a key={i} href={`https://www.mevzuat.gov.tr/${chunk.startsWith("TBK") ? "MevzuatMetin/1.5.6098.pdf" : "MevzuatMetin/1.5.5237.pdf"}`} target="_blank" rel="noopener noreferrer" style={{ color: "#aef", fontWeight: 700 }}>{chunk}</a>
-                      : chunk
-                  )}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-        <style>{`
-          .loading {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            color: #7c3aed;
-            background: ${bgGradient};
-            letter-spacing: 1.5px;
-          }
-        `}</style>
-      </div>
-    );
-  }
 
   // === SONUÇ & ANALİZ EKRANI ===
   if (view === "quiz" && bitti) {
@@ -689,7 +659,7 @@ export default function Tasarim() {
           : i === Number(q.DogruCevap)
       }))
       .filter((r, i) => !r.dogru);
-</div>
+    
       {/* Duyuru/banner alanı */}
       <div style={{
         width: "100%", padding: "13px 0 9px 0", background: "#ede9fe",
@@ -697,7 +667,8 @@ export default function Tasarim() {
       }}>
         🚀 Yeni: Quiz koduyla paylaş, yanlışlarından tekrar çöz, admin panelinden analiz!
       </div>
-      {/* Ana view ekranları */}
+     
+{/* Ana view ekranları */}
       <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
   {view === "giris" && <div>Giriş Ekranı</div>}
   {view === "quiz" && <div>Quiz Ekranı</div>}
