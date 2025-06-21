@@ -665,19 +665,16 @@ return (
       </div>
       {/* Ana view ekranları */}
       <div style={{ padding: "36px 0 0 0", minHeight: "calc(100vh - 60px)" }}>
-        {view === "giris" && /* Giriş ekranı kodun */}
-        {view === "quiz" && /* Quiz kodun */}
-        {view === "profil" && /* Profil ekranın */}
-        {view === "soruEkle" && /* Soru ekle ekranı */}
-        {view === "istatistik" && /* İstatistikler ekranı */}
-        {view === "yardim" && /* Yardım ekranı */}
-        {view === "adminGiris" && /* Admin giriş ekranı */}
-        {view === "admin" && /* Admin paneli */}
-        {/* ...diğer view'ler */}
-      </div>
-    </div>
-  </div>
-);
+  {view === "giris" && <div>Giriş Ekranı</div>}
+  {view === "quiz" && <div>Quiz Ekranı</div>}
+  {view === "profil" && <div>Profil Ekranı</div>}
+  {view === "soruEkle" && <div>Soru Ekle Ekranı</div>}
+  {view === "istatistik" && <div>İstatistikler Ekranı</div>}
+  {view === "yardim" && <div>Yardım Ekranı</div>}
+  {view === "adminGiris" && <div>Admin Giriş Ekranı</div>}
+  {view === "admin" && <div>Admin Paneli</div>}
+  {/* ...diğer view'ler */}
+</div>
 
     return (
       <div style={{
