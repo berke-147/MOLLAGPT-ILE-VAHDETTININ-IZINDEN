@@ -7,11 +7,6 @@ export default function Tasarim() {
   // HOOKLAR FONKSİYONUN İÇİNDE OLMALI!
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 800);
 
-  // ... diğer tüm useState, useEffect, kodlar...
-
-  // örnek olarak view switch:
-  const [view, setView] = useState("giris");
-
 const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
 const mainColor = "#7c3aed";
 const errorColor = "#ef4444";
