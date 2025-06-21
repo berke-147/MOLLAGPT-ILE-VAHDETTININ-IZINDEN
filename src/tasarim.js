@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 
-// Neon renkler ve blur efektiyle 3000 yılı stili
+const CAN_HAKKI = 6; // toplam yanlış hakkı (can)
+
 const bgGradient =
-  "linear-gradient(135deg, #141e30 0%, #243b55 100%)";
-const cardGlass =
-  "rgba(255,255,255,0.12)";
-const borderNeon =
-  "0 0 24px #3be8b0, 0 0 40px #6366f1";
-const mainNeon = "#3be8b0";
-const accentNeon = "#6366f1";
-const wrongNeon = "#fd367e";
-const correctNeon = "#00ffae";
+  "linear-gradient(135deg, #181824 0%, #233356 100%)";
+const cardShadow =
+  "0 4px 32px 0 rgba(49, 69, 130, 0.10), 0 1.5px 6px 0 rgba(49, 69, 130, 0.06)";
+const mainColor = "#7c3aed";
+const errorColor = "#ef4444";
+const correctColor = "#22c55e";
 
 function shuffle(array) {
   const arr = [...array];
@@ -21,12 +19,23 @@ function shuffle(array) {
   return arr;
 }
 
+function saveUser(name) {
+  window.localStorage.setItem("adam-asmaca-user", name);
+}
+function getUser() {
+  return window.localStorage.getItem("adam-asmaca-user");
+}
+
 export default function Tasarim() {
+  const [user, setUser] = useState(getUser() || "");
+  const [ad, setAd] = useState("");
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [checked, setChecked] = useState(false);
-  const [reveal, setReveal] = useState(false);
+  const [can, setCan] = useState(CAN_HAKKI);
+  const [bitti, setBitti] = useState(false);
+  const [kazandi, setKazandi] = useState(false);
 
   // Sheet API url'ini kendi linkinle değiştir!
   const SHEET_API =
@@ -38,24 +47,198 @@ export default function Tasarim() {
       .then(data => setQuestions(shuffle(data)));
   }, []);
 
-  useEffect(() => {
-    setReveal(true);
-    const timeout = setTimeout(() => setReveal(false), 600);
-    return () => clearTimeout(timeout);
-  }, [current]);
-
-  if (!questions.length)
+  // Adam asmaca grafiği için
+  function AdamAsmaca({can}) {
+    // 6 can hakkı için klasik asma adam basitleştirilmiş
     return (
-      <div className="neon-loading">Yükleniyor...</div>
+      <svg width="80" height="110">
+        <line x1="10" y1="100" x2="70" y2="100" stroke="#fff" strokeWidth="3"/>
+        <line x1="40" y1="100" x2="40" y2="20" stroke="#fff" strokeWidth="3"/>
+        <line x1="40" y1="20" x2="65" y2="20" stroke="#fff" strokeWidth="3"/>
+        <line x1="65" y1="20" x2="65" y2="30" stroke="#fff" strokeWidth="3"/>
+        {can <= 5 && <circle cx="65" cy="36" r="7" stroke="#fff" strokeWidth="2.5" fill="none"/>}
+        {can <= 4 && <line x1="65" y1="43" x2="65" y2="65" stroke="#fff" strokeWidth="2.5"/>}
+        {can <= 3 && <line x1="65" y1="50" x2="55" y2="55" stroke="#fff" strokeWidth="2.5"/>}
+        {can <= 2 && <line x1="65" y1="50" x2="75" y2="55" stroke="#fff" strokeWidth="2.5"/>}
+        {can <= 1 && <line x1="65" y1="65" x2="60" y2="80" stroke="#fff" strokeWidth="2.5"/>}
+        {can <= 0 && <line x1="65" y1="65" x2="70" y2="80" stroke="#fff" strokeWidth="2.5"/>}
+      </svg>
     );
+  }
+
+  // Oyunu sıfırlama
+  function restart() {
+    setCurrent(0);
+    setCan(CAN_HAKKI);
+    setBitti(false);
+    setKazandi(false);
+    setSelected(null);
+    setChecked(false);
+    setQuestions(shuffle(questions));
+  }
+
+  // Kullanıcı giriş ekranı
+  if (!user) {
+    return (
+      <div style={{
+        minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+        background: bgGradient,
+        fontFamily: "Inter, sans-serif"
+      }}>
+        <form onSubmit={e=>{
+          e.preventDefault();
+          if(ad.trim().length > 1){
+            setUser(ad.trim());
+            saveUser(ad.trim());
+          }
+        }} style={{
+          background: "#fff2",
+          borderRadius: 18,
+          boxShadow: cardShadow,
+          padding:32,
+          minWidth: 320,
+          textAlign: "center"
+        }}>
+          <h2 style={{
+            fontWeight:900, fontSize:24, marginBottom:16, color:"#fff"
+          }}>Adam Asmaca Quiz'e Hoşgeldin!</h2>
+          <input
+            placeholder="Adınızı girin..."
+            value={ad}
+            onChange={e=>setAd(e.target.value)}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border:"none",
+              width:"90%",
+              marginBottom:14,
+              fontSize: 17,
+              outline: "none"
+            }}
+            required
+          /><br/>
+          <button type="submit"
+            style={{
+              background: mainColor,
+              color:"#fff",
+              border:"none",
+              borderRadius:8,
+              padding:"10px 22px",
+              fontWeight:700,
+              fontSize:17,
+              cursor:"pointer",
+              boxShadow:"0 2px 8px #7c3aed22"
+            }}
+          >Giriş Yap</button>
+        </form>
+      </div>
+    )
+  }
+
+  if (!questions.length) return <div className="loading">Yükleniyor...</div>;
 
   const q = questions[current];
 
+  // Oyun bitti ekranı
+  if (bitti) {
+    return (
+      <div style={{
+        minHeight:"100vh",
+        background: bgGradient,
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        justifyContent:"center",
+        color:"#fff"
+      }}>
+        <AdamAsmaca can={0}/>
+        <h2 style={{fontSize:28,marginTop:18}}>Kaybettin! 😥</h2>
+        <div style={{margin:"18px 0",fontSize:20}}>Doğru cevap: <span style={{color:correctColor}}>{["A","B","C","D"][q.DogruCevap]}) {q[["A","B","C","D"][q.DogruCevap]]}</span></div>
+        <div style={{color:"#ddd", marginBottom:16}}>{q.Aciklama}</div>
+        <button onClick={restart} style={{
+          background: mainColor,
+          color:"#fff",
+          border:"none",
+          borderRadius:8,
+          padding:"10px 22px",
+          fontWeight:700,
+          fontSize:18,
+          marginTop:8,
+          cursor:"pointer"
+        }}>Tekrar Dene</button>
+        <button onClick={()=>{setUser(""); saveUser("");}} style={{
+          background:"#fff1",
+          color:"#fff",
+          border:"none",
+          borderRadius:8,
+          padding:"8px 20px",
+          fontWeight:600,
+          fontSize:15,
+          marginTop:16,
+          cursor:"pointer"
+        }}>Çıkış Yap</button>
+      </div>
+    );
+  }
+
+  // Oyun bitti (tüm soruları geçti)
+  if (kazandi) {
+    return (
+      <div style={{
+        minHeight:"100vh",
+        background: bgGradient,
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        justifyContent:"center",
+        color:"#fff"
+      }}>
+        <AdamAsmaca can={can}/>
+        <h2 style={{fontSize:30,marginTop:12}}>Tebrikler {user}! 🎉</h2>
+        <div style={{margin:"18px 0",fontSize:20}}>Tüm soruları doğru bildin!</div>
+        <button onClick={restart} style={{
+          background: mainColor,
+          color:"#fff",
+          border:"none",
+          borderRadius:8,
+          padding:"10px 22px",
+          fontWeight:700,
+          fontSize:18,
+          marginTop:8,
+          cursor:"pointer"
+        }}>Baştan Oyna</button>
+        <button onClick={()=>{setUser(""); saveUser("");}} style={{
+          background:"#fff1",
+          color:"#fff",
+          border:"none",
+          borderRadius:8,
+          padding:"8px 20px",
+          fontWeight:600,
+          fontSize:15,
+          marginTop:16,
+          cursor:"pointer"
+        }}>Çıkış Yap</button>
+      </div>
+    );
+  }
+
+  // Soru ekranı
   function handleSelect(i) {
     if (!checked) setSelected(i);
   }
   function handleCheck() {
     setChecked(true);
+    if (selected !== Number(q.DogruCevap)) {
+      setCan(c => {
+        if (c <= 1) {
+          setBitti(true);
+          return 0;
+        }
+        return c - 1;
+      });
+    } else if (current === questions.length - 1) {
+      setKazandi(true);
+    }
   }
   function handleNext() {
     setCurrent((c) => c + 1);
@@ -72,121 +255,76 @@ export default function Tasarim() {
         background: bgGradient,
         padding: 0,
         margin: 0,
-        fontFamily: "'Orbitron', 'Inter', Arial, sans-serif"
+        fontFamily: "Inter, sans-serif",
+        color: "#fff"
       }}
     >
-      {/* Animated background glow */}
-      <div
-        style={{
-          position: "fixed",
-          width: "100vw",
-          height: "100vh",
-          pointerEvents: "none",
-          left: 0,
-          top: 0,
-          zIndex: 0
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            width: 300,
-            height: 300,
-            background: "radial-gradient(circle, #3be8b088 10%, transparent 70%)",
-            left: 0,
-            top: 0,
-            filter: "blur(80px)"
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            width: 400,
-            height: 400,
-            background: "radial-gradient(circle, #6366f1aa 10%, transparent 70%)",
-            right: -80,
-            bottom: 0,
-            filter: "blur(80px)"
-          }}
-        />
-      </div>
-      <div
-        style={{
-          maxWidth: 480,
-          margin: "0 auto",
-          padding: "64px 12px 32px",
-          minHeight: "100vh",
-          position: "relative",
-          zIndex: 1
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 34,
-            fontWeight: 900,
-            marginBottom: 18,
-            background: `linear-gradient(90deg,${mainNeon},${accentNeon})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            letterSpacing: 1.5,
-            textShadow: "0 0 18px #3be8b055,0 2px 8px #1d1f33"
-          }}
-        >
-          MOLLA GPT <span style={{ opacity: 0.65 }}>&</span> VAHDETTİNİN İZİNDEN
-        </h1>
-        {/* Neon Progress Bar */}
-        <div
-          style={{
-            width: "100%",
-            height: 10,
-            background: "#1c2743",
-            borderRadius: 14,
-            marginBottom: 24,
-            overflow: "hidden",
-            boxShadow: "0 2px 24px #6366f111"
-          }}
-        >
-          <div
-            style={{
-              width: `${progress}%`,
-              height: "100%",
-              background: `linear-gradient(90deg,${mainNeon} 0%,${accentNeon} 80%)`,
-              borderRadius: 14,
-              boxShadow: borderNeon,
-              transition: "width 0.6s cubic-bezier(.5,1,.5,1)"
-            }}
-          />
+      <div style={{
+        maxWidth: 520,
+        margin: "0 auto",
+        padding: "50px 12px 24px",
+        minHeight: "100vh",
+        position: "relative"
+      }}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontWeight:700, fontSize:21, letterSpacing:1, marginBottom:18}}>
+            Adam Asmaca Quiz
+          </div>
+          <div style={{
+            fontWeight:700,
+            fontSize:15,
+            background:"#fff2",
+            padding:"7px 14px",
+            borderRadius:8
+          }}>
+            <span role="img" aria-label="user">👤</span> {user}
+          </div>
         </div>
-        {/* Card */}
+        {/* Progress Bar ve Can */}
+        <div style={{display:"flex",alignItems:"center",gap:18,marginBottom:14}}>
+          <div style={{
+            width: 90, height: 110, display:"flex",alignItems:"center",justifyContent:"center"
+          }}>
+            <AdamAsmaca can={can}/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{
+              width:"100%",height:8, background:"#393a50",borderRadius:8,overflow:"hidden",marginBottom:9
+            }}>
+              <div style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: mainColor,
+                borderRadius: 8,
+                transition: "width 0.5s cubic-bezier(.5,1,.5,1)"
+              }}/>
+            </div>
+            <div style={{fontSize:14,color:"#fff",opacity:.88,marginLeft:1}}>
+              Soru {current + 1} / {questions.length}
+              &nbsp;&nbsp;|&nbsp;&nbsp;
+              <span style={{color: errorColor}}>Can: {can}</span>
+            </div>
+          </div>
+        </div>
+        {/* Soru Kartı */}
         <div
-          className={`glass-card ${reveal ? "card-animate" : ""}`}
           style={{
-            background: cardGlass,
-            padding: 38,
-            borderRadius: 32,
-            boxShadow:
-              "0 8px 42px 0 #3be8b045, 0 2px 8px #6366f133",
-            marginBottom: 28,
-            minHeight: 260,
+            background: "#fff2",
+            padding: 30,
+            borderRadius: 22,
+            boxShadow: cardShadow,
+            marginBottom: 22,
+            minHeight: 170,
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            border: `2.3px solid ${accentNeon}`,
-            backdropFilter: "blur(20px)"
+            border:"1.5px solid #393a50"
           }}
         >
-          <div
-            style={{
-              fontSize: 21,
-              fontWeight: 700,
-              marginBottom: 28,
-              color: "#fff",
-              textShadow: "0 2px 24px #3be8b055, 0 1px 3px #243b55"
-            }}
-          >
+          <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 20, color:"#fff" }}>
             {q.Soru}
           </div>
-          <div style={{ display: "grid", gap: 17, marginBottom: 6 }}>
+          <div style={{ display: "grid", gap: 14, marginBottom: 5 }}>
             {[q.A, q.B, q.C, q.D].map((opt, i) => (
               <button
                 key={i}
@@ -194,61 +332,50 @@ export default function Tasarim() {
                 disabled={checked}
                 style={{
                   textAlign: "left",
-                  padding: "18px 22px",
-                  borderRadius: 16,
-                  fontSize: 17,
+                  padding: "14px 18px",
+                  borderRadius: 13,
+                  fontSize: 16,
                   border:
                     selected === i
                       ? checked
                         ? i === Number(q.DogruCevap)
-                          ? `2.5px solid ${correctNeon}`
-                          : `2.5px solid ${wrongNeon}`
-                        : `2.5px solid ${mainNeon}`
-                      : "1.5px solid #23284d",
+                          ? `2.5px solid ${correctColor}`
+                          : `2.5px solid ${errorColor}`
+                        : `2.5px solid ${mainColor}`
+                      : "1.5px solid #393a50",
                   background:
                     selected === i
                       ? checked
                         ? i === Number(q.DogruCevap)
-                          ? "#00ffae0f"
-                          : "#fd367e17"
-                        : "#3be8b00b"
-                      : "#12192baf",
+                          ? "#24fbb315"
+                          : "#ff7b8c18"
+                        : "#bdbbf61c"
+                      : "#242944bb",
                   color: "#fff",
-                  fontWeight: selected === i ? 800 : 600,
-                  transition: "all 0.19s cubic-bezier(.7,0,.2,1)",
+                  fontWeight: selected === i ? 700 : 500,
+                  transition: "all 0.13s",
                   boxShadow:
                     selected === i
                       ? checked
                         ? i === Number(q.DogruCevap)
-                          ? "0 0 16px #00ffae55"
-                          : "0 0 12px #fd367e55"
-                        : "0 0 12px #3be8b044"
-                      : "0 1.5px 8px #23284d11",
+                          ? "0 0 9px #24fbb377"
+                          : "0 0 9px #ff7b8c44"
+                        : "0 0 6px #7c3aed33"
+                      : "",
                   cursor: checked ? "default" : "pointer",
-                  letterSpacing: 1.2,
-                  outline: "none",
-                  filter:
-                    selected === i && !checked
-                      ? "brightness(1.15)"
-                      : "brightness(1)"
+                  outline: "none"
                 }}
                 onMouseOver={e => {
                   if (!checked && selected !== i)
-                    e.currentTarget.style.background = "#3be8b023";
+                    e.currentTarget.style.background = "#7c3aed1a";
                 }}
                 onMouseOut={e => {
                   if (!checked && selected !== i)
-                    e.currentTarget.style.background = "#12192baf";
+                    e.currentTarget.style.background = "#242944bb";
                 }}
               >
-                <span style={{
-                  opacity: 0.63,
-                  fontWeight: 900,
-                  letterSpacing: 2.2,
-                  fontSize: 14,
-                  marginRight: 7
-                }}>
-                  {"ABCD"[i]})
+                <span style={{ opacity: 0.5, fontWeight: 700 }}>
+                  {"ABCD"[i]}){" "}
                 </span>
                 {opt}
               </button>
@@ -259,144 +386,83 @@ export default function Tasarim() {
               onClick={handleCheck}
               disabled={selected === null}
               style={{
-                marginTop: 32,
+                marginTop: 22,
                 width: "100%",
-                padding: 18,
-                background: `linear-gradient(90deg,${mainNeon},${accentNeon})`,
-                color: "#141e30",
+                padding: 14,
+                background: mainColor,
+                color: "#fff",
                 border: "none",
-                borderRadius: 16,
-                fontWeight: 900,
-                fontSize: 17,
-                letterSpacing: 1.1,
-                boxShadow: "0 4px 22px #3be8b044, 0 2px 8px #6366f144",
-                cursor: selected === null ? "not-allowed" : "pointer",
-                textShadow: "0 1.5px 8px #fff5",
-                textTransform: "uppercase",
-                transition: "all .21s cubic-bezier(.9,0,.2,1)"
+                borderRadius: 11,
+                fontWeight: 700,
+                fontSize: 16,
+                boxShadow: "0 4px 15px #7c3aed18",
+                cursor: selected === null ? "not-allowed" : "pointer"
               }}
             >
-              CEVABI KONTROL ET
+              Kontrol Et
             </button>
           ) : (
             <>
               <div
                 style={{
-                  marginTop: 26,
-                  padding: 19,
-                  borderRadius: 14,
+                  marginTop: 18,
+                  padding: 13,
+                  borderRadius: 10,
                   background:
                     selected === Number(q.DogruCevap)
-                      ? "#00ffae14"
-                      : "#fd367e22",
+                      ? "#24fbb325"
+                      : "#ff7b8c24",
                   color:
                     selected === Number(q.DogruCevap)
-                      ? correctNeon
-                      : wrongNeon,
-                  fontWeight: 900,
-                  fontSize: 17,
-                  minHeight: 48,
+                      ? correctColor
+                      : errorColor,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  minHeight: 32,
                   boxShadow:
                     selected === Number(q.DogruCevap)
-                      ? "0 0 14px #00ffae"
-                      : "0 0 13px #fd367e88",
-                  border: `1.4px solid ${
-                    selected === Number(q.DogruCevap) ? correctNeon : wrongNeon
-                  }`,
-                  letterSpacing: 1.1
+                      ? "0 0 8px #22c55e66"
+                      : "0 0 8px #ef444466"
                 }}
               >
-                {selected === Number(q.DogruCevap) ? "✨ Doğru!" : "⛔ Yanlış!"}
+                {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
                 <br />
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: "#fff" }}>
-                  {q.Aciklama}
-                </span>
+                <span style={{ fontSize: 14, color:"#fff" }}>{q.Aciklama}</span>
               </div>
-              <button
-                onClick={handleNext}
-                disabled={current === questions.length - 1}
-                style={{
-                  marginTop: 21,
-                  width: "100%",
-                  padding: 17,
-                  background: `linear-gradient(90deg,${accentNeon} 10%,${mainNeon} 100%)`,
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 14,
-                  fontWeight: 800,
-                  fontSize: 16,
-                  boxShadow: "0 4px 18px #6366f133",
-                  cursor:
-                    current === questions.length - 1
-                      ? "not-allowed"
-                      : "pointer",
-                  letterSpacing: 1.2,
-                  textShadow: "0 2px 14px #6366f177",
-                  transition: "all .19s"
-                }}
-              >
-                Sonraki Soru
-              </button>
+              {current !== questions.length - 1 && (
+                <button
+                  onClick={handleNext}
+                  style={{
+                    marginTop: 14,
+                    width: "100%",
+                    padding: 14,
+                    background: correctColor,
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 11,
+                    fontWeight: 700,
+                    fontSize: 16,
+                    boxShadow: "0 4px 12px #22c55e33",
+                    cursor: "pointer"
+                  }}
+                >
+                  Sonraki Soru
+                </button>
+              )}
             </>
           )}
         </div>
-        {/* Mini footer */}
-        <div
-          style={{
-            textAlign: "center",
-            color: accentNeon,
-            fontSize: 15,
-            marginTop: 27,
-            letterSpacing: 1,
-            opacity: 0.88,
-            fontWeight: 700
-          }}
-        >
-          Soru {current + 1} / {questions.length}
-        </div>
-        <div
-          style={{
-            textAlign: "center",
-            color: "#3be8b0bb",
-            fontSize: 11,
-            marginTop: 12,
-            letterSpacing: 0.3,
-            fontWeight: 700,
-            textShadow: "0 2px 8px #3be8b099"
-          }}
-        >
-          © {new Date().getFullYear()} MOLLA GPT & Vahdettinin İzinden <span style={{ fontWeight: 800, color: "#fff" }}>Quiz Uygulaması</span>
-        </div>
       </div>
-      {/* Yükleniyor animasyonu için ufak bir stil */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&display=swap');
-        .neon-loading {
+        .loading {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.7rem;
-          color: #3be8b0;
+          font-size: 1.4rem;
+          color: #7c3aed;
           background: ${bgGradient};
-          letter-spacing: 2px;
-          font-family: 'Orbitron', 'Inter', Arial, sans-serif;
-          text-shadow: 0 0 16px #6366f1, 0 0 32px #3be8b0;
-        }
-        .glass-card {
-          animation: fadein .8s cubic-bezier(.4,0,.2,1);
-        }
-        .card-animate {
-          animation: pop .62s cubic-bezier(.5,0,.3,1);
-        }
-        @keyframes pop {
-          0% { transform: scale(.95) rotate(-2deg);}
-          65% { transform: scale(1.05) rotate(1deg);}
-          100% { transform: scale(1) rotate(0);}
-        }
-        @keyframes fadein {
-          from { opacity: 0; transform: translateY(40px);}
-          to { opacity: 1; transform: none;}
+          letter-spacing: 1.5px;
         }
       `}</style>
     </div>
