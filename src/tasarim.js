@@ -1,8 +1,8 @@
 // --- BÜYÜK, GELİŞMİŞ VE MODÜLER HUKUK QUIZ UYGULAMASI ---
 // Not: Ekstra detaylandırmak istediğin alanları bana ayrı sorabilirsin!
-const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 800);
-
 import React, { useEffect, useState, useRef } from "react";
+
+const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 800);
 
 const UYGULAMA_ADI = "HUKUK FAK ÇALIŞMA";
 const mainColor = "#7c3aed";
@@ -1038,11 +1038,7 @@ if (admin && view === "admin") {
     </div>
   );
 }
-<footer style={{
-  textAlign: "center", color: "#bcbcbc", fontSize: 13, margin: "26px 0 12px", opacity: 0.88
-}}>
-  © {new Date().getFullYear()} Hukuk Fakültesi Çalışma | Geliştirici: berke147 | <a href="https://github.com/berke-DEMİRAL" style={{ color: "#bcb" }}>GitHub</a>
-</footer>
+
 
   
 
