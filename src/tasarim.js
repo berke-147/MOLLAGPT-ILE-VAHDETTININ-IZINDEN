@@ -1,8 +1,7 @@
 // HUKUK QUIZ UYGULAMASI ---
 import React, { useEffect, useState, useRef } from "react";
-
 import Sidebar from "./Sidebar";
-import { useState } from "react";
+
 
 export default function Tasarim() {
   // HOOKLAR FONKSİYONUN İÇİNDE OLMALI!
