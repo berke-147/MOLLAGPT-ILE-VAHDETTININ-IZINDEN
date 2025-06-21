@@ -1,56 +1,26 @@
 import React, { useState } from "react";
 
-// Soru havuzu - istediğin kadar ekleyebilirsin
-const questions = [
-  {
-    question: "TBMM’nin kendi varlığını yasal olarak ilk defa kabul ettirdiği uluslararası belge hangisidir?",
-    options: [
-      "A) Lozan Antlaşması",
-      "B) Gümrü Antlaşması",
-      "C) Mudanya Ateşkes Antlaşması",
-      "D) Ankara Antlaşması"
-    ],
-    answer: 1,
-    explanation: "Gümrü Antlaşması, TBMM'nin uluslararası alanda resmen tanındığı ilk belgedir."
-  },
-  {
-    question: "Osmanlı Devleti’nde saltanatın kaldırılması kararı hangi hukuki dayanağa bağlanmıştır?",
-    options: [
-      "A) 1921 Anayasası",
-      "B) Teşkilat-ı Esasiye Kanunu",
-      "C) Halifelik makamı",
-      "D) Ulusal egemenlik ilkesi"
-    ],
-    answer: 3,
-    explanation: "Saltanatın kaldırılması ulusal egemenlik ilkesine dayanmıştır."
-  },
-  {
-    question: "Aşağıdakilerden hangisi Misak-ı Milli’de yer alan konulardan biri DEĞİLDİR?",
-    options: [
-      "A) Azınlık hakları",
-      "B) Kapitülasyonların kaldırılması",
-      "C) Boğazların statüsü",
-      "D) Sınırların belirlenmesi"
-    ],
-    answer: 2,
-    explanation: "Boğazların statüsü Misak-ı Milli’de doğrudan yer almaz."
-  },
-  // ... Devamı eklenebilir
-];
-
-// Karıştırıcı fonksiyon (her açılışta sıralar)
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-shuffle(questions);
+import React, { useEffect, useState } from "react";
 
 export default function App() {
+  const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [checked, setChecked] = useState(false);
+
+  // <-- BURAYI DÜZENLE: Sheet API url'ini kendi linkinle değiştir!
+  const SHEET_API = "https://opensheet.vercel.app/1Xyz12345ABCDE67890/Sheet1";
+
+  useEffect(() => {
+    fetch(SHEET_API)
+      .then(res => res.json())
+      .then(data => {
+        // Soruları karıştırmak istersen shuffle fonksiyonu yazabilirsin
+        setQuestions(data);
+      });
+  }, []);
+
+  if (!questions.length) return <div>Yükleniyor...</div>;
 
   const q = questions[current];
 
@@ -81,9 +51,9 @@ export default function App() {
           boxShadow: "0 2px 16px #0001"
         }}
       >
-        <div style={{ fontSize: 18, marginBottom: 16 }}>{q.question}</div>
+        <div style={{ fontSize: 18, marginBottom: 16 }}>{q.Soru}</div>
         <div style={{ display: "grid", gap: 12 }}>
-          {q.options.map((opt, i) => (
+          {[q.A, q.B, q.C, q.D].map((opt, i) => (
             <button
               key={i}
               onClick={() => handleSelect(i)}
@@ -95,7 +65,7 @@ export default function App() {
                 border:
                   selected === i
                     ? checked
-                      ? i === q.answer
+                      ? i === Number(q.DogruCevap)
                         ? "2px solid #3b9b37"
                         : "2px solid #ce2020"
                       : "2px solid #2563eb"
@@ -103,7 +73,7 @@ export default function App() {
                 background:
                   selected === i
                     ? checked
-                      ? i === q.answer
+                      ? i === Number(q.DogruCevap)
                         ? "#e6ffe7"
                         : "#ffe6e6"
                       : "#e7f0ff"
@@ -141,13 +111,13 @@ export default function App() {
                 padding: 14,
                 borderRadius: 10,
                 background:
-                  selected === q.answer ? "#e6ffe7" : "#ffe6e6",
-                color: selected === q.answer ? "#228b22" : "#b91c1c"
+                  selected === Number(q.DogruCevap) ? "#e6ffe7" : "#ffe6e6",
+                color: selected === Number(q.DogruCevap) ? "#228b22" : "#b91c1c"
               }}
             >
-              {selected === q.answer ? "Doğru!" : "Yanlış!"}
+              {selected === Number(q.DogruCevap) ? "Doğru!" : "Yanlış!"}
               <br />
-              <span style={{ fontSize: 14 }}>{q.explanation}</span>
+              <span style={{ fontSize: 14 }}>{q.Aciklama}</span>
             </div>
             <button
               onClick={handleNext}
